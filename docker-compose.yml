@@ -1,0 +1,94 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: astro-ai-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-astro_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-astro_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-astro_user} -d ${POSTGRES_DB:-astro_ai}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - astro-network
+
+  astrology-engine:
+    build:
+      context: ./astrology-engine
+      dockerfile: ../docker/Dockerfile.astrology-engine
+    container_name: astro-ai-astrology-engine
+    restart: unless-stopped
+    environment:
+      DEFAULT_AYANAMSHA: ${DEFAULT_AYANAMSHA:-LAHIRI}
+      DEFAULT_NODE_TYPE: ${DEFAULT_NODE_TYPE:-MEAN_NODE}
+      DEFAULT_HOUSE_SYSTEM: ${DEFAULT_HOUSE_SYSTEM:-WHOLE_SIGN_WITH_SRIPATI}
+      DEFAULT_DASHA_YEAR_DAYS: ${DEFAULT_DASHA_YEAR_DAYS:-365.2425}
+      RAHU_KETU_TRINAL_ASPECTS: ${RAHU_KETU_TRINAL_ASPECTS:-false}
+    ports:
+      - "${ASTRO_ENGINE_PORT:-8000}:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    networks:
+      - astro-network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: astro-ai-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      astrology-engine:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-astro_ai}
+      POSTGRES_USER: ${POSTGRES_USER:-astro_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-change_me_in_production}
+      ASTRO_ENGINE_URL: http://astrology-engine:8000
+      JWT_SECRET: ${JWT_SECRET:-replace_with_at_least_256_bit_base64_encoded_secret_key_for_jwt_signing}
+      AI_PROVIDER: ${AI_PROVIDER:-MOCK}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    networks:
+      - astro-network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: astro-ai-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+    networks:
+      - astro-network
+
+volumes:
+  postgres_data:
+
+networks:
+  astro-network:
+    driver: bridge

@@ -1,0 +1,62 @@
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# Java / Spring Boot / Maven
+target/
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+hs_err_pid*
+replay_pid*
+.mvn/wrapper/maven-wrapper.jar
+
+# Python / Astrology Engine
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+build/
+*.egg-info/
+
+# Frontend / Node / Vite
+node_modules/
+frontend/dist/
+frontend/build/
+.vite/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# IDEs & Editors
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+*.swp
+*.swo
+
+# OS generated
+.DS_Store
+Thumbs.db
+
+# Logs & Local DB Volumes
+logs/
+*.log
+postgres-data/
+redis-data/

@@ -1,4 +1,3 @@
-$ErrorActionPreference = "Stop"
 $root = Split-Path -Parent $PSScriptRoot
 
 Write-Host "=== [1/3] Running Python Astrology Engine Tests ===" -ForegroundColor Cyan
@@ -10,10 +9,11 @@ Pop-Location
 Write-Host "`n=== [2/3] Running Spring Boot Backend Tests ===" -ForegroundColor Cyan
 Push-Location (Join-Path $root "backend")
 if (-not $env:JAVA_HOME -or -not (Test-Path (Join-Path $env:JAVA_HOME "bin\java.exe"))) {
-    $javaHomeLine = (java -XshowSettings:properties -version 2>&1 | Select-String "java.home =").ToString()
+    $ErrorActionPreference = "Continue"
+    $javaHomeLine = (cmd /c "java -XshowSettings:properties -version 2>&1" | Select-String "java.home =").ToString()
     $env:JAVA_HOME = ($javaHomeLine -split "=")[1].Trim()
 }
-.\mvnw.cmd test -q
+.\mvnw.cmd test
 if ($LASTEXITCODE -ne 0) { Pop-Location; exit $LASTEXITCODE }
 Pop-Location
 

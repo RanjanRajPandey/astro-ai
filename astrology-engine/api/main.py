@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from api.location_router import router as location_router
 from models.health import EngineHealthResponse
 from rules.config import DEFAULT_SPEC
 
@@ -11,6 +12,8 @@ app = FastAPI(
     ),
     version=DEFAULT_SPEC.specification_version,
 )
+
+app.include_router(location_router)
 
 
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])

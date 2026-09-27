@@ -4,6 +4,7 @@ import type {
   CreateBirthProfilePayload,
   GazetteerCity,
   KundliChartResponse,
+  NakshatraCalculationResponse,
 } from '../types/astrology';
 
 interface ApiEnvelope<T> {
@@ -43,3 +44,13 @@ export async function getD1Chart(birthProfileId: string): Promise<KundliChartRes
   const res = await http.get<ApiEnvelope<KundliChartResponse>>(`/charts/${birthProfileId}/d1`);
   return res.data.data;
 }
+
+export async function getNakshatraAnalysis(
+  birthProfileId: string,
+): Promise<NakshatraCalculationResponse> {
+  const res = await http.get<ApiEnvelope<NakshatraCalculationResponse>>(
+    `/nakshatra/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+

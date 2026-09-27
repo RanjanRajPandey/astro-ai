@@ -191,3 +191,45 @@ export interface KundliChartResponse {
   planets: PlanetPosition[];
   houses: HouseDetail[];
 }
+
+export interface NakshatraPlacementItem {
+  bodyName: string;
+  longitude: number;
+  rashiSign: ZodiacSign;
+  nakshatraName: string;
+  nakshatraIndex: number;
+  pada: number;
+  padaNavamshaSign: ZodiacSign;
+  rulerPlanet: GrahaName;
+  degreeInNakshatra: number;
+  degreeInNakshatraDms: string;
+  elapsedFraction: number;
+  remainingFraction: number;
+  deity: string;
+  gana: string;
+  nadi: string;
+  yoni: string;
+  symbol: string;
+  taraNumberFromMoon: number;
+  taraNameFromMoon: string;
+  taraQuality: 'FAVORABLE' | 'CHALLENGING' | 'MIXED_INTENSE';
+  relationshipToNakshatraLord: string;
+}
+
+export interface NakshatraCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ayanamshaType: string;
+  ayanamshaValue: number;
+  janmaNakshatra: string;
+  janmaNakshatraIndex: number;
+  janmaPada: number;
+  janmaNakshatraLord: GrahaName;
+  janmaRashi: ZodiacSign;
+  moonElapsedFraction: number;
+  moonRemainingFraction: number;
+  placements: NakshatraPlacementItem[];
+}
+

@@ -17,12 +17,19 @@ import type {
   CreateBirthProfilePayload,
   GrahaName,
   KundliChartResponse,
+  NakshatraCalculationResponse,
 } from './types/astrology';
-import { createBirthProfile, getD1Chart, listBirthProfiles } from './services/api';
+import {
+  createBirthProfile,
+  getD1Chart,
+  getNakshatraAnalysis,
+  listBirthProfiles,
+} from './services/api';
 import { NorthIndianChart } from './components/charts/NorthIndianChart';
 import { SouthIndianChart } from './components/charts/SouthIndianChart';
 import { PlanetInspectorDrawer } from './components/planets/PlanetInspectorDrawer';
 import { HouseInspectorDrawer } from './components/houses/HouseInspectorDrawer';
+import { NakshatraExplorerSection } from './components/nakshatra/NakshatraExplorerSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -30,6 +37,7 @@ export function App() {
   const [profiles, setProfiles] = useState<BirthProfile[]>([]);
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<KundliChartResponse | null>(null);
+  const [nakshatraData, setNakshatraData] = useState<NakshatraCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -72,16 +80,17 @@ export function App() {
     let active = true;
     setLoading(true);
     setError(null);
-    getD1Chart(activeProfileId)
-      .then((res) => {
+    Promise.all([getD1Chart(activeProfileId), getNakshatraAnalysis(activeProfileId)])
+      .then(([d1Res, nakRes]) => {
         if (!active) return;
-        setChartData(res);
+        setChartData(d1Res);
+        setNakshatraData(nakRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
       .catch((err: any) => {
         if (!active) return;
-        setError(err?.response?.data?.message || 'Failed to load D1 Kundli chart.');
+        setError(err?.response?.data?.message || 'Failed to load D1 Kundli & Nakshatra chart.');
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -536,6 +545,9 @@ export function App() {
                 })}
               </div>
             </section>
+
+            {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
+            {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}
           </>
         )}
       </main>

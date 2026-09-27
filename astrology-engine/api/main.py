@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from api.house_router import router as house_router
 from api.location_router import router as location_router
+from api.nakshatra_router import router as nakshatra_router
 from api.planet_router import router as planet_router
 from models.health import EngineHealthResponse
 from rules.config import DEFAULT_SPEC
@@ -18,6 +19,7 @@ app = FastAPI(
 app.include_router(location_router)
 app.include_router(planet_router)
 app.include_router(house_router)
+app.include_router(nakshatra_router)
 
 
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])

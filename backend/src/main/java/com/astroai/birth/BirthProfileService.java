@@ -1,5 +1,6 @@
 package com.astroai.birth;
 
+import com.astroai.chart.ChartPersistenceHelper;
 import com.astroai.common.ResourceNotFoundException;
 import com.astroai.location.LocationService;
 import com.astroai.location.ResolvedLocationTime;
@@ -23,54 +24,58 @@ public class BirthProfileService {
     private final UserRepository userRepository;
     private final LocationService locationService;
     private final PasswordEncoder passwordEncoder;
+    private final ChartPersistenceHelper chartPersistenceHelper;
 
     public BirthProfileService(
             BirthProfileRepository birthProfileRepository,
             UserRepository userRepository,
             LocationService locationService,
-            PasswordEncoder passwordEncoder
+            PasswordEncoder passwordEncoder,
+            ChartPersistenceHelper chartPersistenceHelper
     ) {
         this.birthProfileRepository = birthProfileRepository;
         this.userRepository = userRepository;
         this.locationService = locationService;
         this.passwordEncoder = passwordEncoder;
+        this.chartPersistenceHelper = chartPersistenceHelper;
     }
 
-    @Transactional
     public BirthProfileResponse createProfile(BirthProfileRequest request) {
-        UUID ownerId = ensureUserExists(request.userId());
+        return chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            UUID ownerId = ensureUserExists(request.userId());
 
-        ResolvedLocationTime resolved = locationService.resolveLocationAndBirthTime(
-                request.placeOfBirth(),
-                request.dateOfBirth(),
-                request.timeOfBirth(),
-                request.latitude(),
-                request.longitude(),
-                request.timezone()
-        );
+            ResolvedLocationTime resolved = locationService.resolveLocationAndBirthTime(
+                    request.placeOfBirth(),
+                    request.dateOfBirth(),
+                    request.timeOfBirth(),
+                    request.latitude(),
+                    request.longitude(),
+                    request.timezone()
+            );
 
-        Instant now = Instant.now();
-        BirthProfile profile = new BirthProfile(
-                UUID.randomUUID(),
-                ownerId,
-                resolved.location().getId(),
-                request.name().trim(),
-                request.dateOfBirth(),
-                request.timeOfBirth(),
-                resolved.birthTimeAccurate(),
-                resolved.location().getPlaceName(),
-                request.gender().trim().toUpperCase(),
-                resolved.latitude(),
-                resolved.longitude(),
-                resolved.timezoneId(),
-                resolved.utcOffsetHours(),
-                resolved.utcBirthTime(),
-                now,
-                now
-        );
+            Instant now = Instant.now();
+            BirthProfile profile = new BirthProfile(
+                    UUID.randomUUID(),
+                    ownerId,
+                    resolved.location().getId(),
+                    request.name().trim(),
+                    request.dateOfBirth(),
+                    request.timeOfBirth(),
+                    resolved.birthTimeAccurate(),
+                    resolved.location().getPlaceName(),
+                    request.gender().trim().toUpperCase(),
+                    resolved.latitude(),
+                    resolved.longitude(),
+                    resolved.timezoneId(),
+                    resolved.utcOffsetHours(),
+                    resolved.utcBirthTime(),
+                    now,
+                    now
+            );
 
-        BirthProfile saved = birthProfileRepository.save(profile);
-        return BirthProfileResponse.fromEntity(saved, resolved.calculationWarnings());
+            BirthProfile saved = birthProfileRepository.saveAndFlush(profile);
+            return BirthProfileResponse.fromEntity(saved, resolved.calculationWarnings());
+        });
     }
 
     @Transactional(readOnly = true)
@@ -95,42 +100,45 @@ public class BirthProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("BirthProfile not found with id: " + id));
     }
 
-    @Transactional
     public BirthProfileResponse updateProfile(UUID id, BirthProfileRequest request) {
-        BirthProfile existing = findEntityOrThrow(id);
+        return chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            BirthProfile existing = findEntityOrThrow(id);
 
-        ResolvedLocationTime resolved = locationService.resolveLocationAndBirthTime(
-                request.placeOfBirth(),
-                request.dateOfBirth(),
-                request.timeOfBirth(),
-                request.latitude(),
-                request.longitude(),
-                request.timezone()
-        );
+            ResolvedLocationTime resolved = locationService.resolveLocationAndBirthTime(
+                    request.placeOfBirth(),
+                    request.dateOfBirth(),
+                    request.timeOfBirth(),
+                    request.latitude(),
+                    request.longitude(),
+                    request.timezone()
+            );
 
-        existing.updateDetails(
-                resolved.location().getId(),
-                request.name().trim(),
-                request.dateOfBirth(),
-                request.timeOfBirth(),
-                resolved.birthTimeAccurate(),
-                resolved.location().getPlaceName(),
-                request.gender().trim().toUpperCase(),
-                resolved.latitude(),
-                resolved.longitude(),
-                resolved.timezoneId(),
-                resolved.utcOffsetHours(),
-                resolved.utcBirthTime()
-        );
+            existing.updateDetails(
+                    resolved.location().getId(),
+                    request.name().trim(),
+                    request.dateOfBirth(),
+                    request.timeOfBirth(),
+                    resolved.birthTimeAccurate(),
+                    resolved.location().getPlaceName(),
+                    request.gender().trim().toUpperCase(),
+                    resolved.latitude(),
+                    resolved.longitude(),
+                    resolved.timezoneId(),
+                    resolved.utcOffsetHours(),
+                    resolved.utcBirthTime()
+            );
 
-        BirthProfile saved = birthProfileRepository.save(existing);
-        return BirthProfileResponse.fromEntity(saved, resolved.calculationWarnings());
+            BirthProfile saved = birthProfileRepository.saveAndFlush(existing);
+            return BirthProfileResponse.fromEntity(saved, resolved.calculationWarnings());
+        });
     }
 
-    @Transactional
     public void deleteProfile(UUID id) {
-        BirthProfile existing = findEntityOrThrow(id);
-        birthProfileRepository.delete(existing);
+        chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            BirthProfile existing = findEntityOrThrow(id);
+            birthProfileRepository.delete(existing);
+            return null;
+        });
     }
 
     private UUID ensureUserExists(UUID requestedUserId) {
@@ -148,7 +156,7 @@ public class BirthProfileService {
                 now,
                 now
         );
-        userRepository.save(defaultUser);
+        userRepository.saveAndFlush(defaultUser);
         return targetId;
     }
 

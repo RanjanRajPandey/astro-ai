@@ -3,20 +3,18 @@ package com.astroai.planet;
 import com.astroai.birth.BirthProfile;
 import com.astroai.birth.BirthProfileService;
 import com.astroai.chart.Chart;
-import com.astroai.chart.ChartRepository;
+import com.astroai.chart.ChartPersistenceHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,20 +26,20 @@ public class PlanetService {
     private static final String CALCULATION_VERSION = "1.0.0-BPHS-LAHIRI";
 
     private final BirthProfileService birthProfileService;
-    private final ChartRepository chartRepository;
+    private final ChartPersistenceHelper chartPersistenceHelper;
     private final PlanetPositionRepository planetPositionRepository;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
 
     public PlanetService(
             BirthProfileService birthProfileService,
-            ChartRepository chartRepository,
+            ChartPersistenceHelper chartPersistenceHelper,
             PlanetPositionRepository planetPositionRepository,
             ObjectMapper objectMapper,
             @Value("${astroai.engine.base-url:http://localhost:8000}") String engineBaseUrl
     ) {
         this.birthProfileService = birthProfileService;
-        this.chartRepository = chartRepository;
+        this.chartPersistenceHelper = chartPersistenceHelper;
         this.planetPositionRepository = planetPositionRepository;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -53,7 +51,6 @@ public class PlanetService {
                 .build();
     }
 
-    @Transactional
     public PlanetaryCalculationResponseDto calculateAndPersistPlanets(UUID birthProfileId) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 
@@ -68,48 +65,48 @@ public class PlanetService {
 
         PlanetaryCalculationResponseDto engineResult = invokeAstrologyEngine(requestPayload);
 
-        // Persist or update Chart & PlanetPositions in database
-        Chart chart = chartRepository.findByBirthProfileId(birthProfileId)
-                .orElseGet(() -> chartRepository.save(new Chart(
-                        UUID.randomUUID(),
-                        birthProfileId,
-                        engineResult.ayanamshaType(),
-                        engineResult.ayanamshaValue(),
-                        "WHOLE_SIGN_WITH_SRIPATI",
-                        engineResult.nodeType(),
-                        engineResult.ascendantSign(),
-                        engineResult.ascendantDegreeInSign(),
-                        CALCULATION_VERSION,
-                        Instant.now()
-                )));
+        Chart chart = chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            Chart c = chartPersistenceHelper.getOrCreateChartInCurrentTx(
+                    birthProfileId,
+                    engineResult.ayanamshaType(),
+                    engineResult.ayanamshaValue(),
+                    "WHOLE_SIGN_WITH_SRIPATI",
+                    engineResult.nodeType(),
+                    engineResult.ascendantSign(),
+                    engineResult.ascendantDegreeInSign(),
+                    CALCULATION_VERSION
+            );
 
-        planetPositionRepository.deleteByChartId(chart.getId());
+            planetPositionRepository.deleteByChartId(c.getId());
+            planetPositionRepository.flush();
 
-        for (PlanetPositionDto p : engineResult.planets()) {
-            try {
-                String relJson = objectMapper.writeValueAsString(p.planetaryRelationships());
-                PlanetPosition entity = new PlanetPosition(
-                        UUID.randomUUID(),
-                        chart.getId(),
-                        p.planet(),
-                        p.longitude(),
-                        p.latitude(),
-                        p.speedLongitude(),
-                        p.sign(),
-                        p.degreeInSign(),
-                        p.house(),
-                        p.nakshatra(),
-                        p.pada(),
-                        p.retrograde(),
-                        p.combust(),
-                        p.dignity(),
-                        relJson
-                );
-                planetPositionRepository.save(entity);
-            } catch (Exception ex) {
-                throw new IllegalStateException("Failed to serialize planetary relationships for " + p.planet(), ex);
+            for (PlanetPositionDto p : engineResult.planets()) {
+                try {
+                    String relJson = objectMapper.writeValueAsString(p.planetaryRelationships());
+                    PlanetPosition entity = new PlanetPosition(
+                            UUID.randomUUID(),
+                            c.getId(),
+                            p.planet(),
+                            p.longitude(),
+                            p.latitude(),
+                            p.speedLongitude(),
+                            p.sign(),
+                            p.degreeInSign(),
+                            p.house(),
+                            p.nakshatra(),
+                            p.pada(),
+                            p.retrograde(),
+                            p.combust(),
+                            p.dignity(),
+                            relJson
+                    );
+                    planetPositionRepository.save(entity);
+                } catch (Exception ex) {
+                    throw new IllegalStateException("Failed to serialize planetary relationships for " + p.planet(), ex);
+                }
             }
-        }
+            return c;
+        });
 
         return new PlanetaryCalculationResponseDto(
                 birthProfileId,
@@ -137,7 +134,6 @@ public class PlanetService {
                     .retrieve()
                     .body(PlanetaryCalculationResponseDto.class);
         } catch (Exception httpEx) {
-            // Seamless local CLI bridge to the exact same Python Swiss Ephemeris engine
             return invokeLocalPythonEngineCli(requestPayload);
         }
     }
@@ -160,7 +156,6 @@ public class PlanetService {
                 os.write(jsonInput.getBytes(StandardCharsets.UTF_8));
             }
 
-            // Drain stdout & stderr BEFORE waitFor() to avoid OS pipe buffer deadlock on Windows (>4KB JSON payload)
             byte[] stdoutBytes = process.getInputStream().readAllBytes();
             byte[] stderrBytes = process.getErrorStream().readAllBytes();
 

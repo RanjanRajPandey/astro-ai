@@ -3,13 +3,12 @@ package com.astroai.nakshatra;
 import com.astroai.birth.BirthProfile;
 import com.astroai.birth.BirthProfileService;
 import com.astroai.chart.Chart;
-import com.astroai.chart.ChartRepository;
+import com.astroai.chart.ChartPersistenceHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.OutputStream;
@@ -17,7 +16,6 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -29,20 +27,20 @@ public class NakshatraService {
     private static final String CALCULATION_VERSION = "1.0.0-BPHS-LAHIRI";
 
     private final BirthProfileService birthProfileService;
-    private final ChartRepository chartRepository;
+    private final ChartPersistenceHelper chartPersistenceHelper;
     private final NakshatraPlacementRepository nakshatraPlacementRepository;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
 
     public NakshatraService(
             BirthProfileService birthProfileService,
-            ChartRepository chartRepository,
+            ChartPersistenceHelper chartPersistenceHelper,
             NakshatraPlacementRepository nakshatraPlacementRepository,
             ObjectMapper objectMapper,
             @Value("${astroai.engine.base-url:http://localhost:8000}") String engineBaseUrl
     ) {
         this.birthProfileService = birthProfileService;
-        this.chartRepository = chartRepository;
+        this.chartPersistenceHelper = chartPersistenceHelper;
         this.nakshatraPlacementRepository = nakshatraPlacementRepository;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -54,7 +52,6 @@ public class NakshatraService {
                 .build();
     }
 
-    @Transactional
     public NakshatraCalculationResponseDto calculateAndPersistNakshatras(UUID birthProfileId) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 
@@ -79,38 +76,39 @@ public class NakshatraService {
                 ? ascPlacement.longitude().remainder(BigDecimal.valueOf(30))
                 : BigDecimal.ZERO;
 
-        Chart chart = chartRepository.findByBirthProfileId(birthProfileId)
-                .orElseGet(() -> chartRepository.save(new Chart(
-                        UUID.randomUUID(),
-                        birthProfileId,
-                        engineResult.ayanamshaType(),
-                        engineResult.ayanamshaValue(),
-                        "WHOLE_SIGN_WITH_SRIPATI",
-                        "MEAN_NODE",
-                        ascSign,
-                        ascDegree,
-                        CALCULATION_VERSION,
-                        Instant.now()
-                )));
-
-        nakshatraPlacementRepository.deleteByChartId(chart.getId());
-
-        for (NakshatraPlacementDto p : engineResult.placements()) {
-            NakshatraPlacement entity = new NakshatraPlacement(
-                    UUID.randomUUID(),
-                    chart.getId(),
-                    p.bodyName(),
-                    p.nakshatraName(),
-                    p.nakshatraIndex(),
-                    p.pada(),
-                    p.rulerPlanet(),
-                    p.deity(),
-                    p.gana(),
-                    p.nadi(),
-                    p.yoni()
+        Chart chart = chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            Chart c = chartPersistenceHelper.getOrCreateChartInCurrentTx(
+                    birthProfileId,
+                    engineResult.ayanamshaType(),
+                    engineResult.ayanamshaValue(),
+                    "WHOLE_SIGN_WITH_SRIPATI",
+                    "MEAN_NODE",
+                    ascSign,
+                    ascDegree,
+                    CALCULATION_VERSION
             );
-            nakshatraPlacementRepository.save(entity);
-        }
+
+            nakshatraPlacementRepository.deleteByChartId(c.getId());
+            nakshatraPlacementRepository.flush();
+
+            for (NakshatraPlacementDto p : engineResult.placements()) {
+                NakshatraPlacement entity = new NakshatraPlacement(
+                        UUID.randomUUID(),
+                        c.getId(),
+                        p.bodyName(),
+                        p.nakshatraName(),
+                        p.nakshatraIndex(),
+                        p.pada(),
+                        p.rulerPlanet(),
+                        p.deity(),
+                        p.gana(),
+                        p.nadi(),
+                        p.yoni()
+                );
+                nakshatraPlacementRepository.save(entity);
+            }
+            return c;
+        });
 
         return new NakshatraCalculationResponseDto(
                 birthProfileId,

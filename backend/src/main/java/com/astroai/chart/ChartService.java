@@ -29,7 +29,6 @@ public class ChartService {
         this.houseService = houseService;
     }
 
-    @Transactional
     public KundliChartResponseDto getD1KundliChart(UUID birthProfileId) {
         BirthProfileResponse profile = birthProfileService.getProfile(birthProfileId);
         PlanetaryCalculationResponseDto planetsRes = planetService.calculateAndPersistPlanets(birthProfileId);

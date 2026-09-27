@@ -3,20 +3,18 @@ package com.astroai.house;
 import com.astroai.birth.BirthProfile;
 import com.astroai.birth.BirthProfileService;
 import com.astroai.chart.Chart;
-import com.astroai.chart.ChartRepository;
+import com.astroai.chart.ChartPersistenceHelper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClient;
 
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -28,20 +26,20 @@ public class HouseService {
     private static final String CALCULATION_VERSION = "1.0.0-BPHS-LAHIRI";
 
     private final BirthProfileService birthProfileService;
-    private final ChartRepository chartRepository;
+    private final ChartPersistenceHelper chartPersistenceHelper;
     private final HouseRepository houseRepository;
     private final ObjectMapper objectMapper;
     private final RestClient restClient;
 
     public HouseService(
             BirthProfileService birthProfileService,
-            ChartRepository chartRepository,
+            ChartPersistenceHelper chartPersistenceHelper,
             HouseRepository houseRepository,
             ObjectMapper objectMapper,
             @Value("${astroai.engine.base-url:http://localhost:8000}") String engineBaseUrl
     ) {
         this.birthProfileService = birthProfileService;
-        this.chartRepository = chartRepository;
+        this.chartPersistenceHelper = chartPersistenceHelper;
         this.houseRepository = houseRepository;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
@@ -53,7 +51,6 @@ public class HouseService {
                 .build();
     }
 
-    @Transactional
     public HouseCalculationResponseDto calculateAndPersistHouses(UUID birthProfileId) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 
@@ -69,41 +66,42 @@ public class HouseService {
 
         HouseCalculationResponseDto engineResult = invokeAstrologyEngine(requestPayload);
 
-        Chart chart = chartRepository.findByBirthProfileId(birthProfileId)
-                .orElseGet(() -> chartRepository.save(new Chart(
-                        UUID.randomUUID(),
-                        birthProfileId,
-                        engineResult.ayanamshaType(),
-                        engineResult.ayanamshaValue(),
-                        engineResult.houseSystem(),
-                        "MEAN_NODE",
-                        engineResult.ascendant().sign(),
-                        engineResult.ascendant().degreeInSign(),
-                        CALCULATION_VERSION,
-                        Instant.now()
-                )));
+        Chart chart = chartPersistenceHelper.runSynchronizedTransaction(() -> {
+            Chart c = chartPersistenceHelper.getOrCreateChartInCurrentTx(
+                    birthProfileId,
+                    engineResult.ayanamshaType(),
+                    engineResult.ayanamshaValue(),
+                    engineResult.houseSystem(),
+                    "MEAN_NODE",
+                    engineResult.ascendant().sign(),
+                    engineResult.ascendant().degreeInSign(),
+                    CALCULATION_VERSION
+            );
 
-        houseRepository.deleteByChartId(chart.getId());
+            houseRepository.deleteByChartId(c.getId());
+            houseRepository.flush();
 
-        for (HouseDetailDto h : engineResult.houses()) {
-            try {
-                String occupantsJson = objectMapper.writeValueAsString(h.occupants());
-                House entity = new House(
-                        UUID.randomUUID(),
-                        chart.getId(),
-                        h.houseNumber(),
-                        h.sign(),
-                        h.degreeCusp(),
-                        h.sripatiStartLongitude(),
-                        h.sripatiEndLongitude(),
-                        h.lordPlanet(),
-                        occupantsJson
-                );
-                houseRepository.save(entity);
-            } catch (Exception ex) {
-                throw new IllegalStateException("Failed to persist house " + h.houseNumber(), ex);
+            for (HouseDetailDto h : engineResult.houses()) {
+                try {
+                    String occupantsJson = objectMapper.writeValueAsString(h.occupants());
+                    House entity = new House(
+                            UUID.randomUUID(),
+                            c.getId(),
+                            h.houseNumber(),
+                            h.sign(),
+                            h.degreeCusp(),
+                            h.sripatiStartLongitude(),
+                            h.sripatiEndLongitude(),
+                            h.lordPlanet(),
+                            occupantsJson
+                    );
+                    houseRepository.save(entity);
+                } catch (Exception ex) {
+                    throw new IllegalStateException("Failed to persist house " + h.houseNumber(), ex);
+                }
             }
-        }
+            return c;
+        });
 
         return new HouseCalculationResponseDto(
                 birthProfileId,

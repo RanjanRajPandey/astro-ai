@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from api.dasha_router import router as dasha_router
+from api.divisional_router import router as divisional_router
 from api.house_router import router as house_router
 from api.location_router import router as location_router
 from api.nakshatra_router import router as nakshatra_router
@@ -22,6 +23,7 @@ app.include_router(planet_router)
 app.include_router(house_router)
 app.include_router(nakshatra_router)
 app.include_router(dasha_router)
+app.include_router(divisional_router)
 
 
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])

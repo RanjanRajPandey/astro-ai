@@ -3,6 +3,7 @@ import type {
   BirthProfile,
   CreateBirthProfilePayload,
   DashaCalculationResponse,
+  DivisionalCalculationResponse,
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
@@ -64,5 +65,15 @@ export async function getVimshottariDashas(
   });
   return res.data.data;
 }
+
+export async function getAllDivisionalCharts(
+  birthProfileId: string,
+): Promise<DivisionalCalculationResponse> {
+  const res = await http.get<ApiEnvelope<DivisionalCalculationResponse>>(
+    `/charts/${birthProfileId}/divisional`,
+  );
+  return res.data.data;
+}
+
 
 

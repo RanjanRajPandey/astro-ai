@@ -281,4 +281,61 @@ export interface DashaCalculationResponse {
   mahadashas: DashaPeriodNode[];
 }
 
+export interface DivisionalPlanetPlacement {
+  planet: GrahaName;
+  d1Longitude: number;
+  d1Sign: ZodiacSign;
+  d1House: number;
+  vargaSign: ZodiacSign;
+  vargaSanskritSign: string;
+  vargaSignIndex: number;
+  vargaSignLord: GrahaName;
+  vargaHouse: number;
+  partNumber: number;
+  isVargottama: boolean;
+  dignityInVarga: string;
+  retrograde: boolean;
+  combust: boolean;
+  shashtiamshaName?: string | null;
+  shashtiamshaQuality?: 'BENEFIC' | 'MALEFIC' | null;
+}
+
+export interface DivisionalHouseSummary {
+  houseNumber: number;
+  sign: ZodiacSign;
+  sanskritSign: string;
+  signIndex: number;
+  lordPlanet: GrahaName;
+  occupants: GrahaName[];
+}
+
+export interface DivisionalChartData {
+  vargaCode: string;
+  divisionNumber: number;
+  sanskritName: string;
+  title: string;
+  domainSignification: string;
+  ascendantSign: ZodiacSign;
+  ascendantSanskritSign: string;
+  ascendantSignIndex: number;
+  ascendantLord: GrahaName;
+  isAscendantVargottama: boolean;
+  vargottamaPlanets: string[];
+  planets: DivisionalPlanetPlacement[];
+  houses: DivisionalHouseSummary[];
+}
+
+export interface DivisionalCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ayanamshaType: string;
+  ayanamshaValue: number;
+  d1AscendantSign: ZodiacSign;
+  d9VargottamaSummary: string[];
+  charts: DivisionalChartData[];
+}
+
+
 

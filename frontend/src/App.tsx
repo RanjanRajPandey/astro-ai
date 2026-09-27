@@ -15,6 +15,7 @@ import {
 import type {
   BirthProfile,
   CreateBirthProfilePayload,
+  DashaCalculationResponse,
   GrahaName,
   KundliChartResponse,
   NakshatraCalculationResponse,
@@ -23,6 +24,7 @@ import {
   createBirthProfile,
   getD1Chart,
   getNakshatraAnalysis,
+  getVimshottariDashas,
   listBirthProfiles,
 } from './services/api';
 import { NorthIndianChart } from './components/charts/NorthIndianChart';
@@ -30,6 +32,7 @@ import { SouthIndianChart } from './components/charts/SouthIndianChart';
 import { PlanetInspectorDrawer } from './components/planets/PlanetInspectorDrawer';
 import { HouseInspectorDrawer } from './components/houses/HouseInspectorDrawer';
 import { NakshatraExplorerSection } from './components/nakshatra/NakshatraExplorerSection';
+import { VimshottariDashaSection } from './components/dashas/VimshottariDashaSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -38,6 +41,7 @@ export function App() {
   const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
   const [chartData, setChartData] = useState<KundliChartResponse | null>(null);
   const [nakshatraData, setNakshatraData] = useState<NakshatraCalculationResponse | null>(null);
+  const [dashaData, setDashaData] = useState<DashaCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -84,17 +88,24 @@ export function App() {
     let active = true;
     setLoading(true);
     setError(null);
-    Promise.all([getD1Chart(activeProfileId), getNakshatraAnalysis(activeProfileId)])
-      .then(([d1Res, nakRes]) => {
+    Promise.all([
+      getD1Chart(activeProfileId),
+      getNakshatraAnalysis(activeProfileId),
+      getVimshottariDashas(activeProfileId),
+    ])
+      .then(([d1Res, nakRes, dashaRes]) => {
         if (!active) return;
         setChartData(d1Res);
         setNakshatraData(nakRes);
+        setDashaData(dashaRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
       .catch((err: any) => {
         if (!active) return;
-        setError(err?.response?.data?.message || 'Failed to load D1 Kundli & Nakshatra chart.');
+        setError(
+          err?.response?.data?.message || 'Failed to load D1 Kundli, Nakshatra & Dasha chart.',
+        );
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -103,6 +114,16 @@ export function App() {
       active = false;
     };
   }, [activeProfileId]);
+
+  const handleInspectTargetDashaDate = async (isoUtc: string) => {
+    if (!activeProfileId) return;
+    try {
+      const updated = await getVimshottariDashas(activeProfileId, isoUtc);
+      setDashaData(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to recalculate Dasha for target date.');
+    }
+  };
 
   const handleCreateProfile = async (payload: CreateBirthProfilePayload) => {
     const created = await createBirthProfile(payload);
@@ -552,6 +573,14 @@ export function App() {
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}
+
+            {/* 5-Level Vimshottari Dasha Explorer */}
+            {dashaData && (
+              <VimshottariDashaSection
+                dashaData={dashaData}
+                onChangeTargetDate={handleInspectTargetDashaDate}
+              />
+            )}
           </>
         )}
       </main>

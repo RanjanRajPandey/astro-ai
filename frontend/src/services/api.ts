@@ -2,6 +2,7 @@ import axios from 'axios';
 import type {
   BirthProfile,
   CreateBirthProfilePayload,
+  DashaCalculationResponse,
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
@@ -53,4 +54,15 @@ export async function getNakshatraAnalysis(
   );
   return res.data.data;
 }
+
+export async function getVimshottariDashas(
+  birthProfileId: string,
+  targetTime?: string,
+): Promise<DashaCalculationResponse> {
+  const res = await http.get<ApiEnvelope<DashaCalculationResponse>>(`/dashas/${birthProfileId}`, {
+    params: targetTime ? { targetTime } : undefined,
+  });
+  return res.data.data;
+}
+
 

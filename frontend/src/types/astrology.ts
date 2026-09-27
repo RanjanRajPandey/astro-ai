@@ -233,3 +233,52 @@ export interface NakshatraCalculationResponse {
   placements: NakshatraPlacementItem[];
 }
 
+export interface DashaPeriodNode {
+  planet: GrahaName;
+  level: number;
+  levelName: string;
+  startDateTime: string;
+  endDateTime: string;
+  unclampedStartDateTime: string;
+  durationDays: number;
+  durationYears: number;
+  isCurrentlyActive: boolean;
+  isBirthBalancePeriod: boolean;
+  subPeriods: DashaPeriodNode[];
+}
+
+export interface ActiveDashaStackItem {
+  level: number;
+  levelName: string;
+  planet: GrahaName;
+  startDateTime: string;
+  endDateTime: string;
+  unclampedStartDateTime: string;
+  durationDays: number;
+  elapsedPercentage: number;
+}
+
+export interface DashaCalculationResponse {
+  birthProfileId: string;
+  birthUtcDatetimeIso: string;
+  targetUtcDatetimeIso: string;
+  julianDayUt: number;
+  ayanamshaType: string;
+  ayanamshaValue: number;
+  yearLengthDays: number;
+  moonLongitude: number;
+  janmaNakshatra: string;
+  janmaPada: number;
+  birthDashaLord: GrahaName;
+  moonElapsedFraction: number;
+  moonRemainingFraction: number;
+  birthBalanceYears: number;
+  birthBalanceDays: number;
+  birthBalanceFormatted: string;
+  activeStack: ActiveDashaStackItem[];
+  activeSookshmaPeriods: DashaPeriodNode[];
+  activePranaPeriods: DashaPeriodNode[];
+  mahadashas: DashaPeriodNode[];
+}
+
+

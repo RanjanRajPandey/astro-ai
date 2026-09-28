@@ -457,3 +457,42 @@ export interface ShadbalaCalculationResponse {
   planets: PlanetStrengthEntry[];
 }
 
+export interface HouseStrengthEntry {
+  houseNumber: number;
+  sign: ZodiacSign;
+  sanskritSign: string;
+  lordPlanet: GrahaName;
+  signNature: 'NARA_BIPED' | 'JALACHARA_WATER' | 'KEETA_INSECT' | 'CHATUSHPADA_QUADRUPED';
+  purushartha: 'DHARMA' | 'ARTHA' | 'KAMA' | 'MOKSHA';
+  domainTitle: string;
+  occupants: GrahaName[];
+  bhavadhipatiBala: number;
+  bhavaDigBala: number;
+  bhavaDrishtiBala: number;
+  occupantFactor: number;
+  totalBhavaBalaVirupas: number;
+  totalBhavaBalaRupas: number;
+  strengthGrade: 'VERY_STRONG' | 'STRONG' | 'MODERATE' | 'WEAK';
+  rank: number;
+}
+
+export interface PurusharthaSummary {
+  purushartha: 'DHARMA' | 'ARTHA' | 'KAMA' | 'MOKSHA';
+  houses: number[];
+  averageRupas: number;
+  dominantHouse: number;
+}
+
+export interface BhavaBalaCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ascendantSign: ZodiacSign;
+  ayanamshaType: string;
+  strongestHouse: number;
+  weakestHouse: number;
+  averageRupas: number;
+  purusharthaSummaries: PurusharthaSummary[];
+  houses: HouseStrengthEntry[];
+}

@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import type {
   AspectCalculationResponse,
+  BhavaBalaCalculationResponse,
   BirthProfile,
   CreateBirthProfilePayload,
   DashaCalculationResponse,
@@ -27,6 +28,7 @@ import {
   createBirthProfile,
   getAllDivisionalCharts,
   getD1Chart,
+  getHouseBhavaBala,
   getNakshatraAnalysis,
   getPlanetaryAspects,
   getPlanetaryShadbala,
@@ -42,6 +44,7 @@ import { VimshottariDashaSection } from './components/dashas/VimshottariDashaSec
 import { DivisionalChartsSection } from './components/divisional/DivisionalChartsSection';
 import { DrishtiMatrixSection } from './components/aspects/DrishtiMatrixSection';
 import { ShadbalaSection } from './components/strength/ShadbalaSection';
+import { BhavaBalaSection } from './components/strength/BhavaBalaSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -54,6 +57,7 @@ export function App() {
   const [divisionalData, setDivisionalData] = useState<DivisionalCalculationResponse | null>(null);
   const [aspectData, setAspectData] = useState<AspectCalculationResponse | null>(null);
   const [shadbalaData, setShadbalaData] = useState<ShadbalaCalculationResponse | null>(null);
+  const [bhavaBalaData, setBhavaBalaData] = useState<BhavaBalaCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -107,8 +111,9 @@ export function App() {
       getAllDivisionalCharts(activeProfileId),
       getPlanetaryAspects(activeProfileId),
       getPlanetaryShadbala(activeProfileId),
+      getHouseBhavaBala(activeProfileId),
     ])
-      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes]) => {
+      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes, bhavaRes]) => {
         if (!active) return;
         setChartData(d1Res);
         setNakshatraData(nakRes);
@@ -116,6 +121,7 @@ export function App() {
         setDivisionalData(divRes);
         setAspectData(aspRes);
         setShadbalaData(shadRes);
+        setBhavaBalaData(bhavaRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
@@ -123,7 +129,7 @@ export function App() {
         if (!active) return;
         setError(
           err?.response?.data?.message ||
-            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect & Shadbala charts.',
+            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala & Bhava Bala charts.',
         );
       })
       .finally(() => {
@@ -604,6 +610,9 @@ export function App() {
 
             {/* Six-Fold Planetary Strength (Shadbala & 16-Varga Vimshopaka Bala) */}
             {shadbalaData && <ShadbalaSection shadbalaData={shadbalaData} />}
+
+            {/* 12-House Strength Engine (Bhava Bala & Purushartha Synthesis) */}
+            {bhavaBalaData && <BhavaBalaSection bhavaBalaData={bhavaBalaData} />}
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

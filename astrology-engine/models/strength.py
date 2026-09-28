@@ -63,3 +63,51 @@ class ShadbalaCalculationResponse(BaseModel):
     strongest_planet: str
     weakest_planet: str
     planets: List[PlanetStrengthEntry]
+
+
+class HouseStrengthEntry(BaseModel):
+    house_number: int = Field(..., ge=1, le=12)
+    sign: str
+    sanskrit_sign: str
+    lord_planet: str
+    sign_nature: str = Field(..., description="NARA_BIPED, JALACHARA_WATER, KEETA_INSECT, or CHATUSHPADA_QUADRUPED")
+    purushartha: str = Field(..., description="DHARMA, ARTHA, KAMA, or MOKSHA")
+    domain_title: str
+    occupants: List[str]
+    bhavadhipati_bala: float
+    bhava_dig_bala: float
+    bhava_drishti_bala: float
+    occupant_factor: float
+    total_bhava_bala_virupas: float
+    total_bhava_bala_rupas: float
+    strength_grade: str = Field(..., description="VERY_STRONG, STRONG, MODERATE, or WEAK")
+    rank: int = Field(..., ge=1, le=12)
+
+
+class PurusharthaSummary(BaseModel):
+    purushartha: str
+    houses: List[int]
+    average_rupas: float
+    dominant_house: int
+
+
+class BhavaBalaCalculationRequest(BaseModel):
+    date_of_birth: date
+    time_of_birth: Optional[time] = None
+    latitude: float = Field(..., ge=-90.0, le=90.0)
+    longitude: float = Field(..., ge=-180.0, le=180.0)
+    timezone_id: Optional[str] = None
+    ayanamsha_type: str = "LAHIRI"
+    node_type: str = "MEAN_NODE"
+
+
+class BhavaBalaCalculationResponse(BaseModel):
+    utc_datetime_iso: str
+    julian_day_ut: float
+    ascendant_sign: str
+    ayanamsha_type: str
+    strongest_house: int
+    weakest_house: int
+    average_rupas: float
+    purushartha_summaries: List[PurusharthaSummary]
+    houses: List[HouseStrengthEntry]

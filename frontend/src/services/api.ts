@@ -1,6 +1,7 @@
 import axios from 'axios';
 import type {
   AspectCalculationResponse,
+  BhavaBalaCalculationResponse,
   BirthProfile,
   CreateBirthProfilePayload,
   DashaCalculationResponse,
@@ -95,3 +96,11 @@ export async function getPlanetaryShadbala(
   return res.data.data;
 }
 
+export async function getHouseBhavaBala(
+  birthProfileId: string,
+): Promise<BhavaBalaCalculationResponse> {
+  const res = await http.get<ApiEnvelope<BhavaBalaCalculationResponse>>(
+    `/strengths/houses/${birthProfileId}`,
+  );
+  return res.data.data;
+}

@@ -337,5 +337,68 @@ export interface DivisionalCalculationResponse {
   charts: DivisionalChartData[];
 }
 
+export interface HouseAspectEntry {
+  sourcePlanet: GrahaName;
+  sourceSign: ZodiacSign;
+  sourceHouse: number;
+  targetHouse: number;
+  targetSign: ZodiacSign;
+  houseOffset: number;
+  aspectType: string;
+  isFullAspect: boolean;
+  isSpecialAspect: boolean;
+  padaFraction: string;
+  virupaStrength: number;
+  aspectNature: 'BENEFIC' | 'MALEFIC';
+  ruleApplied: string;
+}
 
+export interface PlanetToPlanetAspect {
+  sourcePlanet: GrahaName;
+  sourceHouse: number;
+  sourceSign: ZodiacSign;
+  sourceLongitude: number;
+  targetPlanet: GrahaName;
+  targetHouse: number;
+  targetSign: ZodiacSign;
+  targetLongitude: number;
+  houseOffset: number;
+  angularSeparationDeg: number;
+  orbFromExactAspectDeg: number;
+  aspectType: string;
+  isFullAspect: boolean;
+  isSpecialAspect: boolean;
+  padaFraction: string;
+  virupaStrength: number;
+  sphutaVirupaStrength: number;
+  aspectNature: 'BENEFIC' | 'MALEFIC';
+  ruleApplied: string;
+}
 
+export interface MutualAspectSummary {
+  planetA: GrahaName;
+  houseA: number;
+  signA: ZodiacSign;
+  planetB: GrahaName;
+  houseB: number;
+  signB: ZodiacSign;
+  relationshipType: 'CONJUNCTION_YUTI' | 'MUTUAL_7TH_OPPOSITION' | 'MUTUAL_SPECIAL_LOCK';
+  aToBAspectType: string;
+  bToAAspectType: string;
+  combinedVirupaStrength: number;
+  exactOrbDeg: number;
+  description: string;
+}
+
+export interface AspectCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ascendantSign: ZodiacSign;
+  ayanamshaType: string;
+  rahuKetuTrinalAspects: boolean;
+  houseAspects: HouseAspectEntry[];
+  planetAspects: PlanetToPlanetAspect[];
+  mutualRelationships: MutualAspectSummary[];
+}

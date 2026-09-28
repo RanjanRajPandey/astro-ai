@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type {
+  AspectCalculationResponse,
   BirthProfile,
   CreateBirthProfilePayload,
   DashaCalculationResponse,
@@ -75,5 +76,11 @@ export async function getAllDivisionalCharts(
   return res.data.data;
 }
 
-
-
+export async function getPlanetaryAspects(
+  birthProfileId: string,
+): Promise<AspectCalculationResponse> {
+  const res = await http.get<ApiEnvelope<AspectCalculationResponse>>(
+    `/aspects/${birthProfileId}`,
+  );
+  return res.data.data;
+}

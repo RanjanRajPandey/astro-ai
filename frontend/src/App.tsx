@@ -13,6 +13,7 @@ import {
   Moon,
 } from 'lucide-react';
 import type {
+  AspectCalculationResponse,
   BirthProfile,
   CreateBirthProfilePayload,
   DashaCalculationResponse,
@@ -26,6 +27,7 @@ import {
   getAllDivisionalCharts,
   getD1Chart,
   getNakshatraAnalysis,
+  getPlanetaryAspects,
   getVimshottariDashas,
   listBirthProfiles,
 } from './services/api';
@@ -36,6 +38,7 @@ import { HouseInspectorDrawer } from './components/houses/HouseInspectorDrawer';
 import { NakshatraExplorerSection } from './components/nakshatra/NakshatraExplorerSection';
 import { VimshottariDashaSection } from './components/dashas/VimshottariDashaSection';
 import { DivisionalChartsSection } from './components/divisional/DivisionalChartsSection';
+import { DrishtiMatrixSection } from './components/aspects/DrishtiMatrixSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -46,6 +49,7 @@ export function App() {
   const [nakshatraData, setNakshatraData] = useState<NakshatraCalculationResponse | null>(null);
   const [dashaData, setDashaData] = useState<DashaCalculationResponse | null>(null);
   const [divisionalData, setDivisionalData] = useState<DivisionalCalculationResponse | null>(null);
+  const [aspectData, setAspectData] = useState<AspectCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -97,13 +101,15 @@ export function App() {
       getNakshatraAnalysis(activeProfileId),
       getVimshottariDashas(activeProfileId),
       getAllDivisionalCharts(activeProfileId),
+      getPlanetaryAspects(activeProfileId),
     ])
-      .then(([d1Res, nakRes, dashaRes, divRes]) => {
+      .then(([d1Res, nakRes, dashaRes, divRes, aspRes]) => {
         if (!active) return;
         setChartData(d1Res);
         setNakshatraData(nakRes);
         setDashaData(dashaRes);
         setDivisionalData(divRes);
+        setAspectData(aspRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
@@ -111,7 +117,7 @@ export function App() {
         if (!active) return;
         setError(
           err?.response?.data?.message ||
-            'Failed to load D1 Kundli, Nakshatra, Dasha & Divisional charts.',
+            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional & Aspect charts.',
         );
       })
       .finally(() => {
@@ -586,6 +592,9 @@ export function App() {
                 onToggleChartStyle={setChartStyle}
               />
             )}
+
+            {/* Planetary Aspects (Graha Drishti & Sphuta Virupa Matrix) */}
+            {aspectData && <DrishtiMatrixSection aspectData={aspectData} />}
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

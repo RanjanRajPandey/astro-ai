@@ -8,6 +8,7 @@ import type {
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
+  ShadbalaCalculationResponse,
 } from '../types/astrology';
 
 interface ApiEnvelope<T> {
@@ -84,3 +85,13 @@ export async function getPlanetaryAspects(
   );
   return res.data.data;
 }
+
+export async function getPlanetaryShadbala(
+  birthProfileId: string,
+): Promise<ShadbalaCalculationResponse> {
+  const res = await http.get<ApiEnvelope<ShadbalaCalculationResponse>>(
+    `/strengths/planets/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+

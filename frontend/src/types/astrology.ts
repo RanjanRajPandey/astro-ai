@@ -402,3 +402,58 @@ export interface AspectCalculationResponse {
   planetAspects: PlanetToPlanetAspect[];
   mutualRelationships: MutualAspectSummary[];
 }
+
+export interface SthanaBalaBreakdown {
+  uchchaBala: number;
+  saptavargajaBala: number;
+  ojhayugmarasyamsaBala: number;
+  kendradiBala: number;
+  drekkanaBala: number;
+  total: number;
+}
+
+export interface KalaBalaBreakdown {
+  nathonnathaBala: number;
+  pakshaBala: number;
+  tribhagaBala: number;
+  varaBala: number;
+  ayanaBala: number;
+  total: number;
+}
+
+export interface PlanetStrengthEntry {
+  planet: GrahaName;
+  sign: ZodiacSign;
+  house: number;
+  d1Dignity: string;
+  isRetrograde: boolean;
+  sthanaBala: number;
+  sthanaBreakdown: SthanaBalaBreakdown;
+  digBala: number;
+  kalaBala: number;
+  kalaBreakdown: KalaBalaBreakdown;
+  chestaBala: number;
+  naisargikaBala: number;
+  drikBala: number;
+  totalShadbalaVirupas: number;
+  totalShadbalaRupas: number;
+  requiredMinimumRupas: number;
+  shadbalaRatio: number;
+  vimshopakaBala: number;
+  vimshopakaPercentage: number;
+  strengthGrade: 'VERY_STRONG' | 'ADEQUATE' | 'MODERATE' | 'WEAK';
+  rank: number;
+}
+
+export interface ShadbalaCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ascendantSign: ZodiacSign;
+  ayanamshaType: string;
+  strongestPlanet: GrahaName;
+  weakestPlanet: GrahaName;
+  planets: PlanetStrengthEntry[];
+}
+

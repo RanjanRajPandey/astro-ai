@@ -7,6 +7,7 @@ from api.location_router import router as location_router
 from api.nakshatra_router import router as nakshatra_router
 from api.planet_router import router as planet_router
 from api.strength_router import router as strength_router
+from api.transit_router import router as transit_router
 from api.yoga_router import router as yoga_router
 from models.health import EngineHealthResponse
 from rules.config import DEFAULT_SPEC
@@ -30,6 +31,7 @@ app.include_router(divisional_router)
 app.include_router(aspect_router)
 app.include_router(strength_router)
 app.include_router(yoga_router)
+app.include_router(transit_router)
 
 
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])

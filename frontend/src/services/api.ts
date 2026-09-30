@@ -10,6 +10,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   ShadbalaCalculationResponse,
+  TransitCalculationResponse,
   YogaCalculationResponse,
 } from '../types/astrology';
 
@@ -114,4 +115,18 @@ export async function getYogasAndDoshas(
   );
   return res.data.data;
 }
+
+export async function getGocharTransits(
+  birthProfileId: string,
+  transitTime?: string,
+): Promise<TransitCalculationResponse> {
+  const res = await http.get<ApiEnvelope<TransitCalculationResponse>>(
+    `/transits/${birthProfileId}`,
+    {
+      params: transitTime ? { transitTime } : undefined,
+    },
+  );
+  return res.data.data;
+}
+
 

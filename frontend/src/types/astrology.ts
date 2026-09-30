@@ -543,3 +543,68 @@ export interface YogaCalculationResponse {
   allEvaluatedYogas: YogaEvaluationEntry[];
 }
 
+export interface TransitPlanetEntry {
+  planet: GrahaName;
+  natalSign: ZodiacSign;
+  natalHouseFromLagna: number;
+  transitLongitude: number;
+  transitSign: ZodiacSign;
+  transitSanskritSign: string;
+  transitDegreeDms: string;
+  transitNakshatra: string;
+  transitPada: number;
+  isRetrograde: boolean;
+  houseFromMoon: number;
+  houseFromLagna: number;
+  isBeneficFromMoon: boolean;
+  vedhaObstructed: boolean;
+  vedhaObstructor: GrahaName | null;
+  gocharStatus: 'FAVORABLE' | 'VEDHA_OBSTRUCTED' | 'NEUTRAL_OR_CHALLENGING';
+  taraBalaCategory: string;
+  isTaraFavorable: boolean;
+  classicalSummary: string;
+}
+
+export interface SadeSatiStatus {
+  sadeSatiActive: boolean;
+  dhaiyaActive: boolean;
+  phase:
+    | 'RISING_12TH'
+    | 'PEAK_JANMA_1ST'
+    | 'SETTING_2ND'
+    | 'DHAIYA_KANTAKA_4TH'
+    | 'DHAIYA_ASHTAMA_8TH'
+    | 'NONE';
+  saturnTransitSign: ZodiacSign;
+  saturnHouseFromMoon: number;
+  saturnHouseFromLagna: number;
+  description: string;
+}
+
+export interface DoubleTransitHouseEntry {
+  houseNumber: number;
+  sign: ZodiacSign;
+  sanskritSign: string;
+  domainTitle: string;
+  jupiterInfluence: string | null;
+  saturnInfluence: string | null;
+  isActivated: boolean;
+}
+
+export interface TransitCalculationResponse {
+  birthProfileId: string;
+  natalUtcDatetimeIso: string;
+  transitUtcDatetimeIso: string;
+  transitJulianDayUt: number;
+  natalAscendantSign: ZodiacSign;
+  natalMoonSign: ZodiacSign;
+  natalMoonNakshatra: string;
+  ayanamshaType: string;
+  favorableTransitCount: number;
+  vedhaObstructedCount: number;
+  sadeSati: SadeSatiStatus;
+  doubleTransitHouses: DoubleTransitHouseEntry[];
+  planets: TransitPlanetEntry[];
+}
+
+

@@ -23,12 +23,14 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   ShadbalaCalculationResponse,
+  TransitCalculationResponse,
   YogaCalculationResponse,
 } from './types/astrology';
 import {
   createBirthProfile,
   getAllDivisionalCharts,
   getD1Chart,
+  getGocharTransits,
   getHouseBhavaBala,
   getNakshatraAnalysis,
   getPlanetaryAspects,
@@ -48,6 +50,7 @@ import { DrishtiMatrixSection } from './components/aspects/DrishtiMatrixSection'
 import { ShadbalaSection } from './components/strength/ShadbalaSection';
 import { BhavaBalaSection } from './components/strength/BhavaBalaSection';
 import { YogaExplorerSection } from './components/yogas/YogaExplorerSection';
+import { TransitExplorerSection } from './components/transits/TransitExplorerSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -62,6 +65,7 @@ export function App() {
   const [shadbalaData, setShadbalaData] = useState<ShadbalaCalculationResponse | null>(null);
   const [bhavaBalaData, setBhavaBalaData] = useState<BhavaBalaCalculationResponse | null>(null);
   const [yogaData, setYogaData] = useState<YogaCalculationResponse | null>(null);
+  const [transitData, setTransitData] = useState<TransitCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -117,8 +121,9 @@ export function App() {
       getPlanetaryShadbala(activeProfileId),
       getHouseBhavaBala(activeProfileId),
       getYogasAndDoshas(activeProfileId),
+      getGocharTransits(activeProfileId),
     ])
-      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes, bhavaRes, yogaRes]) => {
+      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes, bhavaRes, yogaRes, transitRes]) => {
         if (!active) return;
         setChartData(d1Res);
         setNakshatraData(nakRes);
@@ -128,6 +133,7 @@ export function App() {
         setShadbalaData(shadRes);
         setBhavaBalaData(bhavaRes);
         setYogaData(yogaRes);
+        setTransitData(transitRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
@@ -135,7 +141,7 @@ export function App() {
         if (!active) return;
         setError(
           err?.response?.data?.message ||
-            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala, Bhava Bala & Yoga charts.',
+            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala, Bhava Bala, Yoga & Transit charts.',
         );
       })
       .finally(() => {
@@ -153,6 +159,16 @@ export function App() {
       setDashaData(updated);
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to recalculate Dasha for target date.');
+    }
+  };
+
+  const handleInspectTargetTransitDate = async (isoUtc: string) => {
+    if (!activeProfileId) return;
+    try {
+      const updated = await getGocharTransits(activeProfileId, isoUtc);
+      setTransitData(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to recalculate Gochar Transits for target date.');
     }
   };
 
@@ -622,6 +638,14 @@ export function App() {
 
             {/* Classical Vedic Yogas & Dosha Parihara Engine */}
             {yogaData && <YogaExplorerSection yogaData={yogaData} loading={loading} />}
+
+            {/* Planetary Transits (Gochar), Vedha, Sade Sati & Double Transit Engine */}
+            {transitData && (
+              <TransitExplorerSection
+                transitData={transitData}
+                onChangeTransitDate={handleInspectTargetTransitDate}
+              />
+            )}
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

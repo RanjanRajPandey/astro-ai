@@ -607,4 +607,72 @@ export interface TransitCalculationResponse {
   planets: TransitPlanetEntry[];
 }
 
+export type WindowClassification =
+  | 'HIGH_OPPORTUNITY'
+  | 'FAVORABLE_GROWTH'
+  | 'STEADY_CONSOLIDATION'
+  | 'CAUTION_AND_REMEDY';
+
+export interface DomainWindowEvaluation {
+  domainCode: string;
+  domainTitle: string;
+  primaryHouses: number[];
+  natalPromiseScore: number;
+  dashaActivationScore: number;
+  transitConfluenceScore: number;
+  overallConfluenceScore: number;
+  windowClassification: WindowClassification;
+  doubleTransitTriggered: boolean;
+  supportingFactors: string[];
+  challengingFactors: string[];
+}
+
+export interface TemporalForecastWindow {
+  windowIndex: number;
+  windowLabel: string;
+  startUtc: string;
+  endUtc: string;
+  midpointUtc: string;
+  mahadashaLord: GrahaName;
+  antardashaLord: GrahaName;
+  pratyantardashaLord: GrahaName;
+  jupiterTransitSign: ZodiacSign;
+  saturnTransitSign: ZodiacSign;
+  sadeSatiPhase: string;
+  doubleTransitHouses: number[];
+  overallWindowScore: number;
+  dominantDomain: string;
+  domainEvaluations: DomainWindowEvaluation[];
+}
+
+export interface DomainTimelineSummary {
+  domainCode: string;
+  domainTitle: string;
+  primaryHouses: number[];
+  karakaPlanets: GrahaName[];
+  natalPromiseScore: number;
+  averageConfluenceScore: number;
+  peakScore: number;
+  peakWindowLabel: string;
+  peakWindowStartUtc: string;
+  peakWindowEndUtc: string;
+  currentClassification: WindowClassification;
+  executiveSummary: string;
+}
+
+export interface TemporalAnalysisResponse {
+  birthProfileId: string;
+  natalUtcDatetimeIso: string;
+  anchorUtcDatetimeIso: string;
+  natalAscendantSign: ZodiacSign;
+  natalMoonSign: ZodiacSign;
+  ayanamshaType: string;
+  windowCount: number;
+  bestOverallWindowLabel: string;
+  strongestDomainCode: string;
+  domainSummaries: DomainTimelineSummary[];
+  timelineWindows: TemporalForecastWindow[];
+}
+
+
 

@@ -10,6 +10,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   ShadbalaCalculationResponse,
+  TemporalAnalysisResponse,
   TransitCalculationResponse,
   YogaCalculationResponse,
 } from '../types/astrology';
@@ -128,5 +129,19 @@ export async function getGocharTransits(
   );
   return res.data.data;
 }
+
+export async function getTemporalForecast(
+  birthProfileId: string,
+  anchorTime?: string,
+): Promise<TemporalAnalysisResponse> {
+  const res = await http.get<ApiEnvelope<TemporalAnalysisResponse>>(
+    `/temporal/${birthProfileId}`,
+    {
+      params: anchorTime ? { anchorTime } : undefined,
+    },
+  );
+  return res.data.data;
+}
+
 
 

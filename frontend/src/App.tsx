@@ -23,6 +23,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   ShadbalaCalculationResponse,
+  YogaCalculationResponse,
 } from './types/astrology';
 import {
   createBirthProfile,
@@ -33,6 +34,7 @@ import {
   getPlanetaryAspects,
   getPlanetaryShadbala,
   getVimshottariDashas,
+  getYogasAndDoshas,
   listBirthProfiles,
 } from './services/api';
 import { NorthIndianChart } from './components/charts/NorthIndianChart';
@@ -45,6 +47,7 @@ import { DivisionalChartsSection } from './components/divisional/DivisionalChart
 import { DrishtiMatrixSection } from './components/aspects/DrishtiMatrixSection';
 import { ShadbalaSection } from './components/strength/ShadbalaSection';
 import { BhavaBalaSection } from './components/strength/BhavaBalaSection';
+import { YogaExplorerSection } from './components/yogas/YogaExplorerSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -58,6 +61,7 @@ export function App() {
   const [aspectData, setAspectData] = useState<AspectCalculationResponse | null>(null);
   const [shadbalaData, setShadbalaData] = useState<ShadbalaCalculationResponse | null>(null);
   const [bhavaBalaData, setBhavaBalaData] = useState<BhavaBalaCalculationResponse | null>(null);
+  const [yogaData, setYogaData] = useState<YogaCalculationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -112,8 +116,9 @@ export function App() {
       getPlanetaryAspects(activeProfileId),
       getPlanetaryShadbala(activeProfileId),
       getHouseBhavaBala(activeProfileId),
+      getYogasAndDoshas(activeProfileId),
     ])
-      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes, bhavaRes]) => {
+      .then(([d1Res, nakRes, dashaRes, divRes, aspRes, shadRes, bhavaRes, yogaRes]) => {
         if (!active) return;
         setChartData(d1Res);
         setNakshatraData(nakRes);
@@ -122,6 +127,7 @@ export function App() {
         setAspectData(aspRes);
         setShadbalaData(shadRes);
         setBhavaBalaData(bhavaRes);
+        setYogaData(yogaRes);
         setSelectedPlanet('Sun');
         setSelectedHouse(1);
       })
@@ -129,7 +135,7 @@ export function App() {
         if (!active) return;
         setError(
           err?.response?.data?.message ||
-            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala & Bhava Bala charts.',
+            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala, Bhava Bala & Yoga charts.',
         );
       })
       .finally(() => {
@@ -613,6 +619,9 @@ export function App() {
 
             {/* 12-House Strength Engine (Bhava Bala & Purushartha Synthesis) */}
             {bhavaBalaData && <BhavaBalaSection bhavaBalaData={bhavaBalaData} />}
+
+            {/* Classical Vedic Yogas & Dosha Parihara Engine */}
+            {yogaData && <YogaExplorerSection yogaData={yogaData} loading={loading} />}
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

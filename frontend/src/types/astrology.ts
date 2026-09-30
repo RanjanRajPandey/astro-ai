@@ -496,3 +496,50 @@ export interface BhavaBalaCalculationResponse {
   purusharthaSummaries: PurusharthaSummary[];
   houses: HouseStrengthEntry[];
 }
+
+export type YogaCategory =
+  | 'PANCHA_MAHAPURUSHA'
+  | 'LUNAR_YOGA'
+  | 'SOLAR_YOGA'
+  | 'RAJA_YOGA'
+  | 'DHANA_YOGA'
+  | 'VIPARITA_RAJA_YOGA'
+  | 'SPECIAL_YOGA'
+  | 'NEECHA_BHANGA'
+  | 'DOSHA';
+
+export type YogaStatus = 'ACTIVE' | 'CANCELLED_OR_MITIGATED' | 'NOT_FORMED' | 'ABSENT';
+export type YogaStrength = 'VERY_STRONG' | 'STRONG' | 'MODERATE' | 'MILD' | 'MITIGATED' | 'INACTIVE' | 'NONE';
+
+export interface YogaEvaluationEntry {
+  yogaCode: string;
+  name: string;
+  sanskritName: string;
+  category: YogaCategory;
+  definition: string;
+  classicalEffect: string;
+  requiredConditions: string[];
+  detectedConditions: string[];
+  planetsInvolved: GrahaName[];
+  housesInvolved: number[];
+  status: YogaStatus;
+  strength: YogaStrength;
+  isBenefic: boolean;
+}
+
+export interface YogaCalculationResponse {
+  birthProfileId: string;
+  chartId: string;
+  utcDatetimeIso: string;
+  julianDayUt: number;
+  ascendantSign: ZodiacSign;
+  moonSign: ZodiacSign;
+  ayanamshaType: string;
+  activeYogaCount: number;
+  activeDoshaCount: number;
+  mitigatedCount: number;
+  totalEvaluatedCount: number;
+  activeYogas: YogaEvaluationEntry[];
+  allEvaluatedYogas: YogaEvaluationEntry[];
+}
+

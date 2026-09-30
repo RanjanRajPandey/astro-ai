@@ -10,6 +10,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   ShadbalaCalculationResponse,
+  YogaCalculationResponse,
 } from '../types/astrology';
 
 interface ApiEnvelope<T> {
@@ -104,3 +105,13 @@ export async function getHouseBhavaBala(
   );
   return res.data.data;
 }
+
+export async function getYogasAndDoshas(
+  birthProfileId: string,
+): Promise<YogaCalculationResponse> {
+  const res = await http.get<ApiEnvelope<YogaCalculationResponse>>(
+    `/yogas/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+

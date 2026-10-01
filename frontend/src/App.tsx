@@ -24,6 +24,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   QuestionClassificationResponse,
+  ReasoningSynthesisResponse,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
   TransitCalculationResponse,
@@ -38,6 +39,7 @@ import {
   getGocharTransits,
   getHouseBhavaBala,
   getLatestEvidence,
+  getLatestReasoning,
   getNakshatraAnalysis,
   getPlanetaryAspects,
   getPlanetaryShadbala,
@@ -45,6 +47,7 @@ import {
   getVimshottariDashas,
   getYogasAndDoshas,
   listBirthProfiles,
+  synthesizeReasoningChain,
 } from './services/api';
 import { NorthIndianChart } from './components/charts/NorthIndianChart';
 import { SouthIndianChart } from './components/charts/SouthIndianChart';
@@ -61,6 +64,7 @@ import { TransitExplorerSection } from './components/transits/TransitExplorerSec
 import { TemporalForecastSection } from './components/temporal/TemporalForecastSection';
 import { FrameworkExplorerSection } from './components/frameworks/FrameworkExplorerSection';
 import { EvidenceInspectorSection } from './components/evidence/EvidenceInspectorSection';
+import { ReasoningChainSection } from './components/reasoning/ReasoningChainSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -80,6 +84,8 @@ export function App() {
   const [frameworkData, setFrameworkData] = useState<QuestionClassificationResponse | null>(null);
   const [evidenceData, setEvidenceData] = useState<EvidenceGenerationResponse | null>(null);
   const [evidenceLoading, setEvidenceLoading] = useState(false);
+  const [reasoningData, setReasoningData] = useState<ReasoningSynthesisResponse | null>(null);
+  const [reasoningLoading, setReasoningLoading] = useState(false);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -196,6 +202,21 @@ export function App() {
       })
       .catch(() => {});
 
+    getLatestReasoning(activeProfileId)
+      .then((r) => {
+        if (!active) return;
+        if (r) {
+          setReasoningData(r);
+        } else {
+          synthesizeReasoningChain(activeProfileId)
+            .then((res) => {
+              if (active) setReasoningData(res);
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+
     return () => {
       active = false;
     };
@@ -227,10 +248,16 @@ export function App() {
       setFrameworkData(updated);
       if (activeProfileId) {
         setEvidenceLoading(true);
+        setReasoningLoading(true);
         generateEvidenceChain(activeProfileId, questionText, updated.primaryCategory)
           .then((ev) => setEvidenceData(ev))
           .catch(() => {})
           .finally(() => setEvidenceLoading(false));
+
+        synthesizeReasoningChain(activeProfileId, questionText, updated.primaryCategory)
+          .then((rsn) => setReasoningData(rsn))
+          .catch(() => {})
+          .finally(() => setReasoningLoading(false));
       }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to classify question into Vedic Analysis Framework.');
@@ -251,6 +278,23 @@ export function App() {
       setError(err?.response?.data?.message || 'Failed to re-evaluate astrological evidence.');
     } finally {
       setEvidenceLoading(false);
+    }
+  };
+
+  const handleRefreshReasoning = async () => {
+    if (!activeProfileId) return;
+    setReasoningLoading(true);
+    try {
+      const updated = await synthesizeReasoningChain(
+        activeProfileId,
+        frameworkData?.questionText,
+        frameworkData?.primaryCategory,
+      );
+      setReasoningData(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to re-synthesize reasoning chain.');
+    } finally {
+      setReasoningLoading(false);
     }
   };
 
@@ -746,6 +790,15 @@ export function App() {
                 evidenceData={evidenceData}
                 isLoading={evidenceLoading}
                 onRefreshEvidence={handleRefreshEvidence}
+              />
+            )}
+
+            {/* Reasoning Engine & Synthesis Pipeline (Phase 17) */}
+            {reasoningData && (
+              <ReasoningChainSection
+                reasoningData={reasoningData}
+                isLoading={reasoningLoading}
+                onRefreshReasoning={handleRefreshReasoning}
               />
             )}
 

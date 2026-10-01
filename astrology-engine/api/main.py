@@ -8,6 +8,7 @@ from api.house_router import router as house_router
 from api.location_router import router as location_router
 from api.nakshatra_router import router as nakshatra_router
 from api.planet_router import router as planet_router
+from api.reasoning_router import router as reasoning_router
 from api.strength_router import router as strength_router
 from api.temporal_router import router as temporal_router
 from api.transit_router import router as transit_router
@@ -21,7 +22,7 @@ app = FastAPI(
         "Isolated deterministic Vedic Astrology (Jyotish) calculation service. "
         "Computes sidereal positions, houses, nakshatras, D1-D60 divisional charts, "
         "5-level Vimshottari Dashas, Drishti, Shadbala, Bhava Bala, Yogas, Transits, "
-        "Temporal Analysis, Domain Analysis Frameworks, and Evidence Generation."
+        "Temporal Analysis, Domain Analysis Frameworks, Evidence Generation, and Reasoning Synthesis."
     ),
     version=DEFAULT_SPEC.specification_version,
 )
@@ -39,6 +40,7 @@ app.include_router(transit_router)
 app.include_router(temporal_router)
 app.include_router(framework_router)
 app.include_router(evidence_router)
+app.include_router(reasoning_router)
 
 
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])

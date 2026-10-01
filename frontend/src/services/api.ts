@@ -11,6 +11,7 @@ import type {
   KundliChartResponse,
   NakshatraCalculationResponse,
   QuestionClassificationResponse,
+  ReasoningSynthesisResponse,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
   TransitCalculationResponse,
@@ -175,6 +176,29 @@ export async function getLatestEvidence(
   );
   return res.data.data;
 }
+
+export async function synthesizeReasoningChain(
+  birthProfileId: string,
+  questionText?: string,
+  questionCategory?: string,
+): Promise<ReasoningSynthesisResponse> {
+  const res = await http.post<ApiEnvelope<ReasoningSynthesisResponse>>('/reasoning/synthesize', {
+    birth_profile_id: birthProfileId,
+    question_text: questionText,
+    question_category: questionCategory,
+  });
+  return res.data.data;
+}
+
+export async function getLatestReasoning(
+  birthProfileId: string,
+): Promise<ReasoningSynthesisResponse | null> {
+  const res = await http.get<ApiEnvelope<ReasoningSynthesisResponse | null>>(
+    `/reasoning/latest/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+
 
 
 

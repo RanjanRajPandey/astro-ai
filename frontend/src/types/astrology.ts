@@ -733,6 +733,36 @@ export interface EvidenceGenerationResponse {
   timeWindowsSummary: string[];
 }
 
+export interface ReasoningStep {
+  stepOrder: number;
+  stepType:
+    | 'NATAL_PROMISE'
+    | 'DIVISIONAL_VALIDATION'
+    | 'YOGA_CATALYSTS'
+    | 'TEMPORAL_TRIGGER'
+    | 'SYNTHESIS_AND_CONCLUSION';
+  title: string;
+  verdict: 'FAVORABLE' | 'MODERATE' | 'CHALLENGING';
+  confidenceScore: number;
+  narrative: string;
+  linkedFactors: string[];
+  shastraCitations: string[];
+}
+
+export interface ReasoningSynthesisResponse {
+  analysisSessionId: string;
+  birthProfileId: string;
+  frameworkVersion: string;
+  questionText: string;
+  questionCategory: string;
+  primaryHouses: number[];
+  overallVerdict: 'FAVORABLE' | 'MODERATE_PROGRESS' | 'CHALLENGING';
+  compositeScore: number;
+  reasoningSteps: ReasoningStep[];
+  classicalRemedies: string[];
+}
+
+
 
 
 

@@ -762,6 +762,59 @@ export interface ReasoningSynthesisResponse {
   classicalRemedies: string[];
 }
 
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameter_schema: Record<string, unknown>;
+}
+
+export interface ToolExecutionRequest {
+  tool_name: string;
+  arguments: Record<string, unknown>;
+}
+
+export interface ToolExecutionResponse {
+  tool_name: string;
+  success: boolean;
+  result?: Record<string, unknown>;
+  error?: string;
+}
+
+export interface GuardrailResult {
+  is_valid: boolean;
+  confidence_score: number;
+  verified_assertions: string[];
+  flagged_discrepancies: string[];
+  audited_content: string;
+}
+
+export interface LlmToolCall {
+  tool_name: string;
+  arguments: Record<string, unknown>;
+  result?: Record<string, unknown>;
+}
+
+export interface AiChatRequest {
+  birth_profile_id?: string;
+  user_message: string;
+  domain_category?: string;
+  provider?: string;
+  model?: string;
+  include_reasoning?: boolean;
+  parameters?: Record<string, unknown>;
+}
+
+export interface AiChatResponse {
+  response: string;
+  provider: string;
+  model: string;
+  guardrail_result: GuardrailResult;
+  tools_invoked: LlmToolCall[];
+  ground_truth_context: Record<string, unknown>;
+  prompt_tokens: number;
+  completion_tokens: number;
+}
+
 
 
 

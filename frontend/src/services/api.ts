@@ -1,5 +1,7 @@
 import axios from 'axios';
 import type {
+  AiChatRequest,
+  AiChatResponse,
   AspectCalculationResponse,
   BhavaBalaCalculationResponse,
   BirthProfile,
@@ -14,6 +16,9 @@ import type {
   ReasoningSynthesisResponse,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
+  ToolDefinition,
+  ToolExecutionRequest,
+  ToolExecutionResponse,
   TransitCalculationResponse,
   YogaCalculationResponse,
 } from '../types/astrology';
@@ -196,6 +201,23 @@ export async function getLatestReasoning(
   const res = await http.get<ApiEnvelope<ReasoningSynthesisResponse | null>>(
     `/reasoning/latest/${birthProfileId}`,
   );
+  return res.data.data;
+}
+
+export async function getRegisteredTools(): Promise<ToolDefinition[]> {
+  const res = await http.get<ApiEnvelope<ToolDefinition[]>>('/ai/tools');
+  return res.data.data;
+}
+
+export async function executeAstrologyTool(
+  request: ToolExecutionRequest,
+): Promise<ToolExecutionResponse> {
+  const res = await http.post<ApiEnvelope<ToolExecutionResponse>>('/ai/tools/execute', request);
+  return res.data.data;
+}
+
+export async function askAiConsultant(request: AiChatRequest): Promise<AiChatResponse> {
+  const res = await http.post<ApiEnvelope<AiChatResponse>>('/ai/chat', request);
   return res.data.data;
 }
 

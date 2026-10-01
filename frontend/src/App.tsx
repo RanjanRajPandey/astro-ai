@@ -65,6 +65,7 @@ import { TemporalForecastSection } from './components/temporal/TemporalForecastS
 import { FrameworkExplorerSection } from './components/frameworks/FrameworkExplorerSection';
 import { EvidenceInspectorSection } from './components/evidence/EvidenceInspectorSection';
 import { ReasoningChainSection } from './components/reasoning/ReasoningChainSection';
+import { AiConsultationSection } from './components/ai/AiConsultationSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -801,6 +802,9 @@ export function App() {
                 onRefreshReasoning={handleRefreshReasoning}
               />
             )}
+
+            {/* AI Tool Layer & Provider Abstraction (Phase 18) */}
+            <AiConsultationSection birthProfileId={activeProfileId || undefined} />
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

@@ -6,6 +6,7 @@ import type {
   CreateBirthProfilePayload,
   DashaCalculationResponse,
   DivisionalCalculationResponse,
+  EvidenceGenerationResponse,
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
@@ -152,6 +153,29 @@ export async function classifyQuestionAndGetFrameworks(
   });
   return res.data.data;
 }
+
+export async function generateEvidenceChain(
+  birthProfileId: string,
+  questionText?: string,
+  questionCategory?: string,
+): Promise<EvidenceGenerationResponse> {
+  const res = await http.post<ApiEnvelope<EvidenceGenerationResponse>>('/evidence/generate', {
+    birth_profile_id: birthProfileId,
+    question_text: questionText,
+    question_category: questionCategory,
+  });
+  return res.data.data;
+}
+
+export async function getLatestEvidence(
+  birthProfileId: string,
+): Promise<EvidenceGenerationResponse | null> {
+  const res = await http.get<ApiEnvelope<EvidenceGenerationResponse | null>>(
+    `/evidence/latest/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+
 
 
 

@@ -38,11 +38,15 @@ export interface EvidenceItem {
   factor: string;
   category: string;
   observation: string;
-  rule: string;
-  effect: string;
-  classification: EvidenceClassification;
-  importance: EvidenceImportance;
-  source: EvidenceSource;
+  rule?: string;
+  ruleReference?: string;
+  effect?: string;
+  effectDescription?: string;
+  classification?: EvidenceClassification | 'FAVORABLE';
+  finding?: 'FAVORABLE' | 'CHALLENGING' | 'NEUTRAL';
+  importance?: EvidenceImportance;
+  source?: EvidenceSource;
+  weight?: number;
 }
 
 export interface GazetteerCity {
@@ -711,6 +715,24 @@ export interface QuestionClassificationResponse {
   activeFramework: AnalysisFrameworkDefinition;
   allFrameworks: AnalysisFrameworkDefinition[];
 }
+
+export interface EvidenceGenerationResponse {
+  analysisSessionId: string;
+  birthProfileId: string;
+  frameworkVersion: string;
+  questionText: string;
+  questionCategory: string;
+  primaryHouses: number[];
+  requiredVargas: string[];
+  totalEvidenceCount: number;
+  favorableCount: number;
+  challengingCount: number;
+  neutralCount: number;
+  evidenceItems: EvidenceItem[];
+  factorsConsidered: string[];
+  timeWindowsSummary: string[];
+}
+
 
 
 

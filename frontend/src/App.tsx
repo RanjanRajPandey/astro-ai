@@ -19,6 +19,7 @@ import type {
   CreateBirthProfilePayload,
   DashaCalculationResponse,
   DivisionalCalculationResponse,
+  EvidenceGenerationResponse,
   GrahaName,
   KundliChartResponse,
   NakshatraCalculationResponse,
@@ -31,10 +32,12 @@ import type {
 import {
   classifyQuestionAndGetFrameworks,
   createBirthProfile,
+  generateEvidenceChain,
   getAllDivisionalCharts,
   getD1Chart,
   getGocharTransits,
   getHouseBhavaBala,
+  getLatestEvidence,
   getNakshatraAnalysis,
   getPlanetaryAspects,
   getPlanetaryShadbala,
@@ -57,6 +60,7 @@ import { YogaExplorerSection } from './components/yogas/YogaExplorerSection';
 import { TransitExplorerSection } from './components/transits/TransitExplorerSection';
 import { TemporalForecastSection } from './components/temporal/TemporalForecastSection';
 import { FrameworkExplorerSection } from './components/frameworks/FrameworkExplorerSection';
+import { EvidenceInspectorSection } from './components/evidence/EvidenceInspectorSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -74,6 +78,8 @@ export function App() {
   const [transitData, setTransitData] = useState<TransitCalculationResponse | null>(null);
   const [temporalData, setTemporalData] = useState<TemporalAnalysisResponse | null>(null);
   const [frameworkData, setFrameworkData] = useState<QuestionClassificationResponse | null>(null);
+  const [evidenceData, setEvidenceData] = useState<EvidenceGenerationResponse | null>(null);
+  const [evidenceLoading, setEvidenceLoading] = useState(false);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -174,6 +180,22 @@ export function App() {
       .finally(() => {
         if (active) setLoading(false);
       });
+
+    getLatestEvidence(activeProfileId)
+      .then((ev) => {
+        if (!active) return;
+        if (ev) {
+          setEvidenceData(ev);
+        } else {
+          generateEvidenceChain(activeProfileId)
+            .then((res) => {
+              if (active) setEvidenceData(res);
+            })
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+
     return () => {
       active = false;
     };
@@ -203,8 +225,32 @@ export function App() {
     try {
       const updated = await classifyQuestionAndGetFrameworks(questionText);
       setFrameworkData(updated);
+      if (activeProfileId) {
+        setEvidenceLoading(true);
+        generateEvidenceChain(activeProfileId, questionText, updated.primaryCategory)
+          .then((ev) => setEvidenceData(ev))
+          .catch(() => {})
+          .finally(() => setEvidenceLoading(false));
+      }
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to classify question into Vedic Analysis Framework.');
+    }
+  };
+
+  const handleRefreshEvidence = async () => {
+    if (!activeProfileId) return;
+    setEvidenceLoading(true);
+    try {
+      const updated = await generateEvidenceChain(
+        activeProfileId,
+        frameworkData?.questionText,
+        frameworkData?.primaryCategory,
+      );
+      setEvidenceData(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to re-evaluate astrological evidence.');
+    } finally {
+      setEvidenceLoading(false);
     }
   };
 
@@ -691,6 +737,15 @@ export function App() {
               <FrameworkExplorerSection
                 frameworkData={frameworkData}
                 onClassifyQuestion={handleClassifyQuestion}
+              />
+            )}
+
+            {/* Evidence Engine & Structured Observation Pipeline (Phase 16) */}
+            {evidenceData && (
+              <EvidenceInspectorSection
+                evidenceData={evidenceData}
+                isLoading={evidenceLoading}
+                onRefreshEvidence={handleRefreshEvidence}
               />
             )}
 

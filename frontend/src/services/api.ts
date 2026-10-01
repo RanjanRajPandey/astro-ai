@@ -9,6 +9,7 @@ import type {
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
+  QuestionClassificationResponse,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
   TransitCalculationResponse,
@@ -142,6 +143,16 @@ export async function getTemporalForecast(
   );
   return res.data.data;
 }
+
+export async function classifyQuestionAndGetFrameworks(
+  questionText?: string,
+): Promise<QuestionClassificationResponse> {
+  const res = await http.get<ApiEnvelope<QuestionClassificationResponse>>('/frameworks', {
+    params: questionText ? { question: questionText } : undefined,
+  });
+  return res.data.data;
+}
+
 
 
 

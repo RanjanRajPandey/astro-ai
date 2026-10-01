@@ -674,5 +674,44 @@ export interface TemporalAnalysisResponse {
   timelineWindows: TemporalForecastWindow[];
 }
 
+export interface FrameworkChecklistRule {
+  ruleCode: string;
+  factorCategory:
+    | 'HOUSE_AND_LORD'
+    | 'KARAKA_STRENGTH'
+    | 'DIVISIONAL_VARGA'
+    | 'YOGA_OR_DOSHA'
+    | 'DASHA_AND_GOCHAR';
+  description: string;
+  classicalReference: string;
+  weight: number;
+}
+
+export interface AnalysisFrameworkDefinition {
+  categoryCode: string;
+  title: string;
+  sanskritTitle: string;
+  description: string;
+  primaryHouses: number[];
+  secondaryHouses: number[];
+  requiredVargas: string[];
+  naisargikaKarakas: GrahaName[];
+  specialLagnas: string[];
+  keyYogasToCheck: string[];
+  checklistRules: FrameworkChecklistRule[];
+}
+
+export interface QuestionClassificationResponse {
+  frameworkVersion: string;
+  questionText: string;
+  primaryCategory: string;
+  secondaryCategory: string | null;
+  confidenceScore: number;
+  matchedKeywords: string[];
+  activeFramework: AnalysisFrameworkDefinition;
+  allFrameworks: AnalysisFrameworkDefinition[];
+}
+
+
 
 

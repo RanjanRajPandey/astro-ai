@@ -22,12 +22,14 @@ import type {
   GrahaName,
   KundliChartResponse,
   NakshatraCalculationResponse,
+  QuestionClassificationResponse,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
   TransitCalculationResponse,
   YogaCalculationResponse,
 } from './types/astrology';
 import {
+  classifyQuestionAndGetFrameworks,
   createBirthProfile,
   getAllDivisionalCharts,
   getD1Chart,
@@ -54,6 +56,7 @@ import { BhavaBalaSection } from './components/strength/BhavaBalaSection';
 import { YogaExplorerSection } from './components/yogas/YogaExplorerSection';
 import { TransitExplorerSection } from './components/transits/TransitExplorerSection';
 import { TemporalForecastSection } from './components/temporal/TemporalForecastSection';
+import { FrameworkExplorerSection } from './components/frameworks/FrameworkExplorerSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -70,6 +73,7 @@ export function App() {
   const [yogaData, setYogaData] = useState<YogaCalculationResponse | null>(null);
   const [transitData, setTransitData] = useState<TransitCalculationResponse | null>(null);
   const [temporalData, setTemporalData] = useState<TemporalAnalysisResponse | null>(null);
+  const [frameworkData, setFrameworkData] = useState<QuestionClassificationResponse | null>(null);
   const [chartStyle, setChartStyle] = useState<'NORTH' | 'SOUTH'>('NORTH');
   const [selectedPlanet, setSelectedPlanet] = useState<GrahaName | null>('Sun');
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
@@ -100,6 +104,10 @@ export function App() {
         }
         setProfiles(existing);
         setActiveProfileId(existing[0].id);
+
+        classifyQuestionAndGetFrameworks()
+          .then((fw) => setFrameworkData(fw))
+          .catch(() => {});
       } catch (err: any) {
         setError(
           'Backend API is not currently reachable on port 8080. Start the backend server or click "+ New Profile" once running.',
@@ -188,6 +196,15 @@ export function App() {
       setTransitData(updated);
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Failed to recalculate Gochar Transits for target date.');
+    }
+  };
+
+  const handleClassifyQuestion = async (questionText: string) => {
+    try {
+      const updated = await classifyQuestionAndGetFrameworks(questionText);
+      setFrameworkData(updated);
+    } catch (err: any) {
+      setError(err?.response?.data?.message || 'Failed to classify question into Vedic Analysis Framework.');
     }
   };
 
@@ -668,6 +685,14 @@ export function App() {
 
             {/* Temporal Analysis & Dasha-Gochar 12-Month Confluence Forecast */}
             {temporalData && <TemporalForecastSection temporalData={temporalData} />}
+
+            {/* Question Classifier & Classical Vedic Analysis Frameworks */}
+            {frameworkData && (
+              <FrameworkExplorerSection
+                frameworkData={frameworkData}
+                onClassifyQuestion={handleClassifyQuestion}
+              />
+            )}
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

@@ -48,7 +48,7 @@ public class YogaService {
         requestFactory.setConnectTimeout(5000);
         requestFactory.setReadTimeout(15000);
         this.restClient = RestClient.builder()
-                .baseUrl(engineBaseUrl)
+                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
                 .requestFactory(requestFactory)
                 .build();
     }

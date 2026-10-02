@@ -46,7 +46,7 @@ public class PlanetService {
         requestFactory.setConnectTimeout(5000);
         requestFactory.setReadTimeout(10000);
         this.restClient = RestClient.builder()
-                .baseUrl(engineBaseUrl)
+                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
                 .requestFactory(requestFactory)
                 .build();
     }

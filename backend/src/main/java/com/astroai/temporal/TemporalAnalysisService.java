@@ -35,7 +35,7 @@ public class TemporalAnalysisService {
         requestFactory.setConnectTimeout(5000);
         requestFactory.setReadTimeout(20000);
         this.restClient = RestClient.builder()
-                .baseUrl(engineBaseUrl)
+                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
                 .requestFactory(requestFactory)
                 .build();
     }

@@ -128,11 +128,22 @@ function formatDurationReadable(days: number): string {
   return `${(hours * 60).toFixed(0)} mins`;
 }
 
+function isNodeActive(node: any): boolean {
+  if (!node) return false;
+  return Boolean(node.isCurrentlyActive ?? node.is_currently_active);
+}
+
 export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = ({
   dashaData,
   onChangeTargetDate,
 }) => {
-  const [selectedMahaIdx, setSelectedMahaIdx] = useState<number>(0);
+  // Find currently active Mahadasha index directly so first render immediately selects active Mahadasha
+  const initialActiveMahaIdx = useMemo(() => {
+    const idx = dashaData.mahadashas?.findIndex(isNodeActive);
+    return idx >= 0 ? idx : 0;
+  }, [dashaData.mahadashas]);
+
+  const [selectedMahaIdx, setSelectedMahaIdx] = useState<number>(initialActiveMahaIdx);
   const [selectedAntarIdx, setSelectedAntarIdx] = useState<number>(0);
   const [selectedPratyantarIdx, setSelectedPratyantarIdx] = useState<number>(0);
   const [selectedSookshmaIdx, setSelectedSookshmaIdx] = useState<number>(0);
@@ -140,11 +151,11 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
     dashaData.targetUtcDatetimeIso.slice(0, 10),
   );
 
-  // Sync initial selection to the currently active L1 -> L2 -> L3 -> L4 chain
+  // Sync selection to the currently active L1 -> L2 -> L3 -> L4 chain whenever dashaData changes
   useEffect(() => {
     const mIdx = Math.max(
       0,
-      dashaData.mahadashas.findIndex((m) => m.isCurrentlyActive),
+      dashaData.mahadashas.findIndex(isNodeActive),
     );
     setSelectedMahaIdx(mIdx);
 
@@ -152,7 +163,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
     const aIdx = maha
       ? Math.max(
           0,
-          maha.subPeriods.findIndex((a) => a.isCurrentlyActive),
+          maha.subPeriods.findIndex(isNodeActive),
         )
       : 0;
     setSelectedAntarIdx(aIdx);
@@ -161,7 +172,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
     const pIdx = antar
       ? Math.max(
           0,
-          antar.subPeriods.findIndex((p) => p.isCurrentlyActive),
+          antar.subPeriods.findIndex(isNodeActive),
         )
       : 0;
     setSelectedPratyantarIdx(pIdx);
@@ -176,7 +187,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
       );
       const sIdx = Math.max(
         0,
-        sookshmas.findIndex((s) => s.isCurrentlyActive),
+        sookshmas.findIndex(isNodeActive),
       );
       setSelectedSookshmaIdx(sIdx);
     }
@@ -386,7 +397,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
                       />
                       {m.planet}
                     </span>
-                    {m.isCurrentlyActive && (
+                    {isNodeActive(m) && (
                       <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
                         ACTIVE
                       </span>
@@ -426,7 +437,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
                     <span className="font-semibold text-white">
                       {selectedMaha?.planet} - {a.planet}
                     </span>
-                    {a.isCurrentlyActive && (
+                    {isNodeActive(a) && (
                       <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
                         NOW
                       </span>
@@ -465,7 +476,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
                     <span className="font-semibold text-white">
                       {selectedAntar?.planet} - {p.planet}
                     </span>
-                    {p.isCurrentlyActive && (
+                    {isNodeActive(p) && (
                       <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
                         NOW
                       </span>
@@ -501,7 +512,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
                     <span className="font-semibold text-white">
                       {selectedPratyantar?.planet} - {s.planet}
                     </span>
-                    {s.isCurrentlyActive && (
+                    {isNodeActive(s) && (
                       <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 text-[9px] font-bold">
                         NOW
                       </span>
@@ -526,7 +537,7 @@ export const VimshottariDashaSection: React.FC<VimshottariDashaSectionProps> = (
               <div
                 key={`${pr.planet}-${idx}`}
                 className={`px-3 py-2 flex flex-col gap-0.5 ${
-                  pr.isCurrentlyActive ? 'bg-emerald-500/15' : ''
+                  isNodeActive(pr) ? 'bg-emerald-500/15' : ''
                 }`}
               >
                 <div className="flex items-center justify-between">

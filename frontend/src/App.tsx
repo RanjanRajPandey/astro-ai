@@ -117,18 +117,42 @@ export function App() {
       setError(null);
       try {
         let existing = await listBirthProfiles();
-        if (existing.length === 0) {
-          const seeded = await createBirthProfile({
-            name: 'Aarav Sharma (Reference Kundli)',
-            dateOfBirth: '1990-05-15',
-            timeOfBirth: '14:30:00',
-            placeOfBirth: 'New Delhi',
-            gender: 'MALE',
-          });
-          existing = [seeded];
+        let ranjanProfile = existing.find(
+          (p) =>
+            p.name.toLowerCase().includes('ranjan') ||
+            p.name.toLowerCase().includes('pandey'),
+        );
+
+        if (!ranjanProfile) {
+          try {
+            const seeded = await createBirthProfile({
+              name: 'Ranjan Raj Pandey',
+              dateOfBirth: '2004-08-22',
+              timeOfBirth: '18:05:00',
+              placeOfBirth: 'Kushinagar, Uttar Pradesh',
+              gender: 'MALE',
+            });
+            existing = [seeded, ...existing];
+            ranjanProfile = seeded;
+          } catch (seedErr) {
+            console.warn('Could not auto-seed Ranjan Raj Pandey profile:', seedErr);
+          }
         }
+
         setProfiles(existing);
-        setActiveProfileId(existing[0].id);
+
+        // Priority for active profile:
+        // 1. User's explicitly stored profile from localStorage (if still present in existing)
+        // 2. Ranjan Raj Pandey profile
+        // 3. First existing profile
+        const storedId = localStorage.getItem('astro_active_profile_id');
+        const storedMatch = storedId ? existing.find((p) => p.id === storedId) : null;
+        const targetProfile = storedMatch || ranjanProfile || existing[0];
+
+        if (targetProfile) {
+          setActiveProfileId(targetProfile.id);
+          localStorage.setItem('astro_active_profile_id', targetProfile.id);
+        }
 
         classifyQuestionAndGetFrameworks()
           .then((fw) => setFrameworkData(fw))
@@ -315,6 +339,7 @@ export function App() {
     const created = await createBirthProfile(payload);
     setProfiles((prev) => [created, ...prev]);
     setActiveProfileId(created.id);
+    localStorage.setItem('astro_active_profile_id', created.id);
   };
 
   const activePlanetObj =
@@ -347,7 +372,11 @@ export function App() {
           {profiles.length > 0 && (
             <select
               value={activeProfileId || ''}
-              onChange={(e) => setActiveProfileId(e.target.value)}
+              onChange={(e) => {
+                const nextId = e.target.value;
+                setActiveProfileId(nextId);
+                localStorage.setItem('astro_active_profile_id', nextId);
+              }}
               aria-label="Select Saved Birth Profile"
               className="px-3 py-1.5 rounded-lg bg-cosmic-950 border border-cosmic-700 text-xs text-white focus:border-cosmic-gold focus:outline-none"
             >
@@ -457,6 +486,26 @@ export function App() {
                       {chartData.birthProfile.longitude.toFixed(4)}°E)
                     </span>
                   </div>
+                  {dashaData?.activeStack?.[0] && (
+                    <div className="mt-2.5">
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cosmic-950 border border-cosmic-gold/50 text-xs text-cosmic-gold font-bold shadow">
+                        <Sparkles className="w-3.5 h-3.5 text-cosmic-gold" />
+                        <span>
+                          Active Mahadasha (L1): <strong className="text-white">{dashaData.activeStack[0].planet}</strong>
+                        </span>
+                        {dashaData.activeStack[1] && (
+                          <span className="text-slate-300">
+                            → Antardasha (L2): <strong className="text-emerald-400">{dashaData.activeStack[1].planet}</strong>
+                          </span>
+                        )}
+                        {dashaData.activeStack[2] && (
+                          <span className="text-slate-400 hidden sm:inline">
+                            → Pratyantardasha (L3): <strong className="text-sky-300">{dashaData.activeStack[2].planet}</strong>
+                          </span>
+                        )}
+                      </span>
+                    </div>
+                  )}
                 </div>
                 <div className="text-right text-xs text-slate-400">
                   <div>
@@ -867,6 +916,7 @@ export function App() {
             {/* 5-Level Vimshottari Dasha Explorer */}
             {dashaData && (
               <VimshottariDashaSection
+                key={activeProfileId || dashaData.birthProfileId}
                 dashaData={dashaData}
                 onChangeTargetDate={handleInspectTargetDashaDate}
               />

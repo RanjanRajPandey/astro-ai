@@ -165,7 +165,7 @@ export function BirthProfileFormModal({
               <input
                 type="text"
                 required
-                placeholder="e.g., Aarav Sharma"
+                placeholder="e.g., Ranjan Raj Pandey"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="w-full pl-9 pr-3 py-2 rounded-lg bg-cosmic-950 border border-cosmic-700 text-white focus:border-cosmic-gold focus:outline-none"

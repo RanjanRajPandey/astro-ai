@@ -70,4 +70,36 @@ class DashaIntegrationTest {
 
         assertThat(dashaPeriodRepository.findAll()).hasSizeGreaterThanOrEqualTo(80);
     }
+
+    @Test
+    void calculatesSaturnMahadashaForRanjanRajPandeyIn2026() throws Exception {
+        String createProfileJson = """
+                {
+                  "name": "Ranjan Raj Pandey",
+                  "dateOfBirth": "2004-08-22",
+                  "timeOfBirth": "18:05:00",
+                  "placeOfBirth": "Kushinagar, Uttar Pradesh",
+                  "gender": "MALE"
+                }
+                """;
+
+        MvcResult profileResult = mockMvc.perform(post("/api/birth-profiles")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(createProfileJson))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        String profileId = objectMapper.readTree(profileResult.getResponse().getContentAsString())
+                .path("data").path("id").asText();
+
+        mockMvc.perform(get("/api/dashas/" + profileId)
+                        .param("targetTime", "2026-10-02T00:00:00Z"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.success").value(true))
+                .andExpect(jsonPath("$.data.birthDashaLord").value("Jupiter"))
+                .andExpect(jsonPath("$.data.activeStack[0].planet").value("Saturn"))
+                .andExpect(jsonPath("$.data.activeStack[0].levelName").value("MAHADASHA"))
+                .andExpect(jsonPath("$.data.activeStack[1].planet").value("Moon"))
+                .andExpect(jsonPath("$.data.activeStack[1].levelName").value("ANTARDASHA"));
+    }
 }

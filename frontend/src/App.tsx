@@ -11,9 +11,12 @@ import {
   Diamond,
   Sun,
   Moon,
+  User as UserIcon,
+  LogOut,
 } from 'lucide-react';
 import type {
   AspectCalculationResponse,
+  AuthUser,
   BhavaBalaCalculationResponse,
   BirthProfile,
   CreateBirthProfilePayload,
@@ -48,6 +51,8 @@ import {
   getYogasAndDoshas,
   listBirthProfiles,
   synthesizeReasoningChain,
+  getStoredUser,
+  logoutUser,
 } from './services/api';
 import { NorthIndianChart } from './components/charts/NorthIndianChart';
 import { SouthIndianChart } from './components/charts/SouthIndianChart';
@@ -67,6 +72,7 @@ import { EvidenceInspectorSection } from './components/evidence/EvidenceInspecto
 import { ReasoningChainSection } from './components/reasoning/ReasoningChainSection';
 import { AiConsultationSection } from './components/ai/AiConsultationSection';
 import { AiChatbotSection } from './components/ai/AiChatbotSection';
+import { AuthModal } from './components/auth/AuthModal';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -93,6 +99,8 @@ export function App() {
   const [selectedHouse, setSelectedHouse] = useState<number | null>(null);
   const [inspectorTab, setInspectorTab] = useState<'PLANET' | 'HOUSE'>('PLANET');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const bootstrapStartedRef = useRef(false);
@@ -351,11 +359,43 @@ export function App() {
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cosmic-gold text-cosmic-950 hover:bg-amber-400 font-bold text-xs transition-colors"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-cosmic-gold text-cosmic-950 hover:bg-amber-400 font-bold text-xs transition-colors cursor-pointer"
           >
             <Plus className="w-4 h-4" />
             <span>New Birth Profile</span>
           </button>
+
+          {currentUser ? (
+            <div className="flex items-center gap-2 bg-slate-900 border border-purple-500/40 px-3 py-1.5 rounded-lg text-xs">
+              <UserIcon className="w-3.5 h-3.5 text-purple-400" />
+              <div className="text-left hidden sm:block">
+                <span className="font-semibold text-slate-100">{currentUser.full_name}</span>
+                <span className="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-purple-950 text-purple-300 font-mono">
+                  {currentUser.role}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  logoutUser();
+                  setCurrentUser(null);
+                }}
+                title="Sign Out"
+                className="text-slate-400 hover:text-red-400 p-1 rounded transition-colors cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-600/30 border border-purple-500/50 hover:bg-purple-600/50 text-purple-200 font-semibold text-xs transition-colors cursor-pointer"
+            >
+              <UserIcon className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </button>
+          )}
 
           <div className="hidden md:flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full bg-cosmic-800 border border-cosmic-700 text-slate-300">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
@@ -828,6 +868,12 @@ export function App() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleCreateProfile}
+      />
+
+      <AuthModal
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        onAuthSuccess={(user) => setCurrentUser(user)}
       />
     </div>
   );

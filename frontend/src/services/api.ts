@@ -3,6 +3,8 @@ import type {
   AiChatRequest,
   AiChatResponse,
   AspectCalculationResponse,
+  AuthResponse,
+  AuthUser,
   BhavaBalaCalculationResponse,
   BirthProfile,
   ChatMessage,
@@ -15,9 +17,11 @@ import type {
   ExplainabilityTrace,
   GazetteerCity,
   KundliChartResponse,
+  LoginPayload,
   NakshatraCalculationResponse,
   QuestionClassificationResponse,
   ReasoningSynthesisResponse,
+  RegisterPayload,
   SendChatMessagePayload,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
@@ -38,6 +42,14 @@ interface ApiEnvelope<T> {
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
   timeout: 15000,
+});
+
+http.interceptors.request.use((config) => {
+  const token = localStorage.getItem('astro_access_token');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
 });
 
 export async function searchCities(query: string): Promise<GazetteerCity[]> {
@@ -263,6 +275,61 @@ export async function getExplainabilityTrace(messageId: string): Promise<Explain
     `/ai/chat-sessions/messages/${messageId}/explain`,
   );
   return res.data.data;
+}
+
+export function getStoredAccessToken(): string | null {
+  return localStorage.getItem('astro_access_token');
+}
+
+export function setStoredAuth(auth: AuthResponse): void {
+  localStorage.setItem('astro_access_token', auth.access_token);
+  localStorage.setItem('astro_refresh_token', auth.refresh_token);
+  localStorage.setItem('astro_user', JSON.stringify(auth.user));
+}
+
+export function clearStoredAuth(): void {
+  localStorage.removeItem('astro_access_token');
+  localStorage.removeItem('astro_refresh_token');
+  localStorage.removeItem('astro_user');
+}
+
+export function getStoredUser(): AuthUser | null {
+  const userJson = localStorage.getItem('astro_user');
+  if (!userJson) return null;
+  try {
+    return JSON.parse(userJson) as AuthUser;
+  } catch {
+    return null;
+  }
+}
+
+export async function loginUser(payload: LoginPayload): Promise<AuthResponse> {
+  const res = await http.post<ApiEnvelope<AuthResponse>>('/auth/login', payload);
+  setStoredAuth(res.data.data);
+  return res.data.data;
+}
+
+export async function registerUser(payload: RegisterPayload): Promise<AuthResponse> {
+  const res = await http.post<ApiEnvelope<AuthResponse>>('/auth/register', payload);
+  setStoredAuth(res.data.data);
+  return res.data.data;
+}
+
+export async function refreshUserToken(refreshToken: string): Promise<AuthResponse> {
+  const res = await http.post<ApiEnvelope<AuthResponse>>('/auth/refresh', {
+    refresh_token: refreshToken,
+  });
+  setStoredAuth(res.data.data);
+  return res.data.data;
+}
+
+export async function getCurrentUser(): Promise<AuthUser> {
+  const res = await http.get<ApiEnvelope<AuthUser>>('/auth/me');
+  return res.data.data;
+}
+
+export function logoutUser(): void {
+  clearStoredAuth();
 }
 
 

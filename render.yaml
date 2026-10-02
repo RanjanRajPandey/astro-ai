@@ -1,0 +1,55 @@
+services:
+  # 1. Deterministic Python Astrology Engine (Swiss Ephemeris)
+  - type: web
+    name: astro-ai-engine
+    env: docker
+    dockerfilePath: docker/Dockerfile.astrology-engine
+    dockerContext: astrology-engine
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DEFAULT_AYANAMSHA
+        value: LAHIRI
+      - key: DEFAULT_NODE_TYPE
+        value: MEAN_NODE
+      - key: DEFAULT_HOUSE_SYSTEM
+        value: WHOLE_SIGN_WITH_SRIPATI
+      - key: DEFAULT_DASHA_YEAR_DAYS
+        value: "365.2425"
+      - key: RAHU_KETU_TRINAL_ASPECTS
+        value: "false"
+      - key: WORKERS
+        value: "2"
+
+  # 2. Spring Boot Core Reasoning & Explainability API
+  - type: web
+    name: astro-ai-backend
+    env: docker
+    dockerfilePath: docker/Dockerfile.backend
+    dockerContext: backend
+    plan: free
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: ASTRO_ENGINE_URL
+        fromService:
+          name: astro-ai-engine
+          type: web
+          property: host
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AI_PROVIDER
+        value: MOCK
+      - key: DB_MAX_POOL_SIZE
+        value: "5"
+      - key: DB_MIN_IDLE
+        value: "1"
+      - key: SPRING_DATASOURCE_URL
+        sync: false
+      - key: SPRING_DATASOURCE_USERNAME
+        sync: false
+      - key: SPRING_DATASOURCE_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"

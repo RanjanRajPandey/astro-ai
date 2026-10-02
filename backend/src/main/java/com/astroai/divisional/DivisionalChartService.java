@@ -50,7 +50,7 @@ public class DivisionalChartService {
         this.divisionalChartRepository = divisionalChartRepository;
         this.objectMapper = objectMapper;
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(500);
+        requestFactory.setConnectTimeout(5000);
         requestFactory.setReadTimeout(15000);
         this.restClient = RestClient.builder()
                 .baseUrl(engineBaseUrl)

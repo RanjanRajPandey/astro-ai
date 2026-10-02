@@ -46,6 +46,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Set up Python 3.11 for Calculation Engine Fallback
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: astrology-engine/requirements.txt
+
+      - name: Install Astrology Engine Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r ../astrology-engine/requirements.txt
+
       - name: Set up Eclipse Temurin JDK 21
         uses: actions/setup-java@v4
         with:

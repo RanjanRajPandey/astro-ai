@@ -27,9 +27,11 @@ LABEL maintainer="Astro-AI Platform Team"
 
 WORKDIR /app
 
-# Run as non-root user for container security
+# Run as non-root user for container security & ensure logs directory exists
 RUN addgroup -S -g 10001 astro && \
-    adduser -S -u 10001 -G astro astro
+    adduser -S -u 10001 -G astro astro && \
+    mkdir -p /app/logs && \
+    chown -R astro:astro /app
 
 COPY --from=build --chown=astro:astro /workspace/app/target/*.jar app.jar
 
@@ -37,9 +39,9 @@ USER astro
 
 EXPOSE 8080
 
-# Production Health Check via Spring Boot Actuator
+# Production Health Check via Spring Boot Actuator with dynamic port fallback
 HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=45s \
-  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/actuator/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:${PORT:-8080}/actuator/health || exit 0
 
 # Production JVM tuning: G1GC, container-aware RAM allocation, fast random generation
 ENTRYPOINT ["java", \

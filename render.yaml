@@ -33,7 +33,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: ASTRO_ENGINE_URL
-        value: http://127.0.0.1:8000
+        value: https://astro-ai-engine.onrender.com
       - key: JWT_SECRET
         generateValue: true
       - key: AI_PROVIDER

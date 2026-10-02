@@ -19,9 +19,9 @@ public final class EngineUrlNormalizer {
             trimmed = "http://" + trimmed;
         }
 
-        // If configured as astro-ai-engine or missing, route directly to embedded Python engine on loopback
-        if (trimmed.contains("astro-ai-engine")) {
-            return "http://127.0.0.1:8000";
+        // If configured as internal astro-ai-engine hostname, route directly to the live public Render engine URL
+        if (trimmed.contains("astro-ai-engine") && !trimmed.contains(".onrender.com")) {
+            return "https://astro-ai-engine.onrender.com";
         }
 
         String afterScheme = trimmed.substring(trimmed.indexOf("://") + 3);

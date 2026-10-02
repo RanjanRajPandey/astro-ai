@@ -363,6 +363,21 @@ export function logoutUser(): void {
   clearStoredAuth();
 }
 
+export async function deleteAccount(): Promise<void> {
+  await http.delete('/auth/me');
+  clearStoredAuth();
+}
+
+export async function anonymizeAccount(): Promise<AuthUser> {
+  const res = await http.post<ApiEnvelope<AuthUser>>('/auth/me/anonymize');
+  const user = res.data.data;
+  const currentAuth = getStoredUser();
+  if (currentAuth) {
+    localStorage.setItem('astro_user', JSON.stringify(user));
+  }
+  return user;
+}
+
 
 
 

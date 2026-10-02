@@ -13,6 +13,7 @@ import {
   Moon,
   User as UserIcon,
   LogOut,
+  Shield,
 } from 'lucide-react';
 import type {
   AspectCalculationResponse,
@@ -73,6 +74,7 @@ import { ReasoningChainSection } from './components/reasoning/ReasoningChainSect
 import { AiConsultationSection } from './components/ai/AiConsultationSection';
 import { AiChatbotSection } from './components/ai/AiChatbotSection';
 import { AuthModal } from './components/auth/AuthModal';
+import { PrivacySettingsModal } from './components/auth/PrivacySettingsModal';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -101,6 +103,7 @@ export function App() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => getStoredUser());
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [isPrivacyModalOpen, setIsPrivacyModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const bootstrapStartedRef = useRef(false);
@@ -374,6 +377,14 @@ export function App() {
                   {currentUser.role}
                 </span>
               </div>
+              <button
+                type="button"
+                onClick={() => setIsPrivacyModalOpen(true)}
+                title="Privacy & Data Protection Rights"
+                className="text-slate-400 hover:text-purple-300 p-1 rounded transition-colors cursor-pointer"
+              >
+                <Shield className="w-3.5 h-3.5" />
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -874,6 +885,13 @@ export function App() {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onAuthSuccess={(user) => setCurrentUser(user)}
+      />
+
+      <PrivacySettingsModal
+        isOpen={isPrivacyModalOpen}
+        onClose={() => setIsPrivacyModalOpen(false)}
+        currentUser={currentUser}
+        onUserUpdated={(user) => setCurrentUser(user)}
       />
     </div>
   );

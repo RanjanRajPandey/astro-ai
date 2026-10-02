@@ -73,4 +73,16 @@ public class User {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
+    }
 }

@@ -110,4 +110,29 @@ public class AuthService {
                 user.getCreatedAt()
         );
     }
+
+    @Transactional
+    public void deleteAccount(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        userRepository.delete(user);
+    }
+
+    @Transactional
+    public UserProfileResponseDto anonymizeAccount(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + userId));
+        String pseudoSuffix = user.getId().toString().substring(0, 8);
+        user.setFullName("Native-" + pseudoSuffix);
+        user.setEmail("anonymous-" + pseudoSuffix + "@privacy.local");
+        user.setUpdatedAt(Instant.now());
+        User saved = userRepository.save(user);
+        return new UserProfileResponseDto(
+                saved.getId(),
+                saved.getEmail(),
+                saved.getFullName(),
+                saved.getRole(),
+                saved.getCreatedAt()
+        );
+    }
 }

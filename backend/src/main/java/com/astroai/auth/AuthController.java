@@ -10,6 +10,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -62,5 +63,29 @@ public class AuthController {
 
         UserProfileResponseDto profile = authService.getUserProfile(userDetails.getId());
         return ResponseEntity.ok(ApiResponse.ok("User profile retrieved", profile));
+    }
+
+    @DeleteMapping("/me")
+    public ResponseEntity<ApiResponse<Void>> deleteAccount(
+            @AuthenticationPrincipal AstroUserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Not authenticated"));
+        }
+        authService.deleteAccount(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok("User account and all personal birth data deleted successfully", null));
+    }
+
+    @PostMapping("/me/anonymize")
+    public ResponseEntity<ApiResponse<UserProfileResponseDto>> anonymizeAccount(
+            @AuthenticationPrincipal AstroUserDetails userDetails
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ApiResponse.error("Not authenticated"));
+        }
+        UserProfileResponseDto response = authService.anonymizeAccount(userDetails.getId());
+        return ResponseEntity.ok(ApiResponse.ok("Account data anonymized successfully for privacy compliance", response));
     }
 }

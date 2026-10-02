@@ -33,10 +33,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
       - key: ASTRO_ENGINE_URL
-        fromService:
-          name: astro-ai-engine
-          type: web
-          property: hostport
+        value: http://127.0.0.1:8000
       - key: JWT_SECRET
         generateValue: true
       - key: AI_PROVIDER

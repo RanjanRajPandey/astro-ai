@@ -43,29 +43,46 @@ public final class EngineRestClientFactory {
                 String host = uri.getHost();
                 int port = uri.getPort();
 
-                // If connecting to internal engine on Render or Docker mesh fails, try alternating between 10000 and 8000
-                if (host != null && (host.contains("engine") || host.contains("astro"))) {
-                    int alternatePort = (port == 10000) ? 8000 : 10000;
-                    log.warn("Connection to engine at {}:{} failed ({}); attempting alternate port {}", host, port, ex.getMessage(), alternatePort);
+                // 1. If remote engine fails (UnknownHostException, refused, etc.), try alternate port on same host if not localhost
+                if (host != null && !host.equals("127.0.0.1") && !host.equalsIgnoreCase("localhost")) {
+                    // First try localhost loopback on port 8000
                     try {
-                        URI alternateUri = new URI(
-                                uri.getScheme(),
-                                uri.getUserInfo(),
-                                uri.getHost(),
-                                alternatePort,
-                                uri.getPath(),
-                                uri.getQuery(),
-                                uri.getFragment()
-                        );
-                        HttpRequest fallbackRequest = new HttpRequestWrapper(request) {
+                        URI localUri = new URI("http", null, "127.0.0.1", 8000, uri.getPath(), uri.getQuery(), uri.getFragment());
+                        HttpRequest localRequest = new HttpRequestWrapper(request) {
                             @Override
                             public URI getURI() {
-                                return alternateUri;
+                                return localUri;
                             }
                         };
-                        return execution.execute(fallbackRequest, body);
-                    } catch (Exception retryEx) {
-                        log.error("Alternate port {} also failed: {}", alternatePort, retryEx.getMessage());
+                        return execution.execute(localRequest, body);
+                    } catch (Exception localEx) {
+                        log.debug("Local loopback fallback failed ({}), trying host alternate port", localEx.getMessage());
+                    }
+
+                    // Second try alternate port on the original remote host
+                    if (host.contains("engine") || host.contains("astro")) {
+                        int alternatePort = (port == 10000) ? 8000 : 10000;
+                        log.warn("Connection to engine at {}:{} failed ({}); attempting alternate port {}", host, port, ex.getMessage(), alternatePort);
+                        try {
+                            URI alternateUri = new URI(
+                                    uri.getScheme(),
+                                    uri.getUserInfo(),
+                                    uri.getHost(),
+                                    alternatePort,
+                                    uri.getPath(),
+                                    uri.getQuery(),
+                                    uri.getFragment()
+                            );
+                            HttpRequest fallbackRequest = new HttpRequestWrapper(request) {
+                                @Override
+                                public URI getURI() {
+                                    return alternateUri;
+                                }
+                            };
+                            return execution.execute(fallbackRequest, body);
+                        } catch (Exception retryEx) {
+                            log.error("Alternate port {} also failed: {}", alternatePort, retryEx.getMessage());
+                        }
                     }
                 }
                 throw ex;

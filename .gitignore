@@ -3,6 +3,7 @@
 .env.*
 !.env.example
 !.env.*.example
+.neon/
 
 # Java / Spring Boot / Maven
 target/
@@ -61,3 +62,4 @@ logs/
 *.log
 postgres-data/
 redis-data/
+.neon

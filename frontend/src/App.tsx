@@ -159,7 +159,7 @@ export function App() {
           .catch(() => {});
       } catch (err: any) {
         setError(
-          'Backend API is not currently reachable on port 8080. Start the backend server or click "+ New Profile" once running.',
+          'Connecting to live astrology backend... If the service was sleeping, please allow a few seconds and refresh, or click "+ New Profile".',
         );
       } finally {
         setLoading(false);

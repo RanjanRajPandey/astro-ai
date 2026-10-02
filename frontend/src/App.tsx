@@ -66,6 +66,7 @@ import { FrameworkExplorerSection } from './components/frameworks/FrameworkExplo
 import { EvidenceInspectorSection } from './components/evidence/EvidenceInspectorSection';
 import { ReasoningChainSection } from './components/reasoning/ReasoningChainSection';
 import { AiConsultationSection } from './components/ai/AiConsultationSection';
+import { AiChatbotSection } from './components/ai/AiChatbotSection';
 import { BirthProfileFormModal } from './components/kundli/BirthProfileFormModal';
 import { PLANET_COLORS, getDignityBadgeStyle } from './utils/chartMath';
 
@@ -805,6 +806,9 @@ export function App() {
 
             {/* AI Tool Layer & Provider Abstraction (Phase 18) */}
             <AiConsultationSection birthProfileId={activeProfileId || undefined} />
+
+            {/* AI Chatbot & "Why This Answer?" Explainability UI (Phase 19) */}
+            <AiChatbotSection birthProfileId={activeProfileId || undefined} />
 
             {/* 27-Nakshatra, Pada Navamsha & 9-Fold Tara Bala Explorer */}
             {nakshatraData && <NakshatraExplorerSection nakshatraData={nakshatraData} />}

@@ -815,6 +815,55 @@ export interface AiChatResponse {
   completion_tokens: number;
 }
 
+export interface ExplainabilityTrace {
+  message_id: string;
+  chat_session_id: string;
+  birth_profile_id: string;
+  ground_truth_context: Record<string, unknown>;
+  divisional_charts_consulted: string[];
+  active_dasha_period: string;
+  reasoning_verdict: string;
+  composite_score: number;
+  shastric_citations: string[];
+  classical_remedies: string[];
+  guardrail_result: GuardrailResult;
+  provider: string;
+  model: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  chat_session_id: string;
+  sender_role: 'USER' | 'ASSISTANT' | 'SYSTEM';
+  message_content: string;
+  explainability_trace?: ExplainabilityTrace;
+  prompt_tokens: number;
+  completion_tokens: number;
+  created_at: string;
+}
+
+export interface ChatSession {
+  id: string;
+  user_id: string;
+  birth_profile_id: string;
+  title: string;
+  rolling_summary?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateChatSessionPayload {
+  birth_profile_id: string;
+  user_id?: string;
+  title?: string;
+}
+
+export interface SendChatMessagePayload {
+  message: string;
+  domain_category?: string;
+  include_reasoning?: boolean;
+}
+
 
 
 

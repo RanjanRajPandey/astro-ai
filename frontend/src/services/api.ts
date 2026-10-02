@@ -5,15 +5,20 @@ import type {
   AspectCalculationResponse,
   BhavaBalaCalculationResponse,
   BirthProfile,
+  ChatMessage,
+  ChatSession,
   CreateBirthProfilePayload,
+  CreateChatSessionPayload,
   DashaCalculationResponse,
   DivisionalCalculationResponse,
   EvidenceGenerationResponse,
+  ExplainabilityTrace,
   GazetteerCity,
   KundliChartResponse,
   NakshatraCalculationResponse,
   QuestionClassificationResponse,
   ReasoningSynthesisResponse,
+  SendChatMessagePayload,
   ShadbalaCalculationResponse,
   TemporalAnalysisResponse,
   ToolDefinition,
@@ -218,6 +223,45 @@ export async function executeAstrologyTool(
 
 export async function askAiConsultant(request: AiChatRequest): Promise<AiChatResponse> {
   const res = await http.post<ApiEnvelope<AiChatResponse>>('/ai/chat', request);
+  return res.data.data;
+}
+
+export async function createChatSession(
+  payload: CreateChatSessionPayload,
+): Promise<ChatSession> {
+  const res = await http.post<ApiEnvelope<ChatSession>>('/ai/chat-sessions', payload);
+  return res.data.data;
+}
+
+export async function listChatSessions(birthProfileId: string): Promise<ChatSession[]> {
+  const res = await http.get<ApiEnvelope<ChatSession[]>>(
+    `/ai/chat-sessions/profile/${birthProfileId}`,
+  );
+  return res.data.data;
+}
+
+export async function getChatSessionMessages(sessionId: string): Promise<ChatMessage[]> {
+  const res = await http.get<ApiEnvelope<ChatMessage[]>>(
+    `/ai/chat-sessions/${sessionId}/messages`,
+  );
+  return res.data.data;
+}
+
+export async function sendChatMessage(
+  sessionId: string,
+  payload: SendChatMessagePayload,
+): Promise<ChatMessage> {
+  const res = await http.post<ApiEnvelope<ChatMessage>>(
+    `/ai/chat-sessions/${sessionId}/messages`,
+    payload,
+  );
+  return res.data.data;
+}
+
+export async function getExplainabilityTrace(messageId: string): Promise<ExplainabilityTrace> {
+  const res = await http.get<ApiEnvelope<ExplainabilityTrace>>(
+    `/ai/chat-sessions/messages/${messageId}/explain`,
+  );
   return res.data.data;
 }
 

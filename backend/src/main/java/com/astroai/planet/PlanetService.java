@@ -42,13 +42,7 @@ public class PlanetService {
         this.chartPersistenceHelper = chartPersistenceHelper;
         this.planetPositionRepository = planetPositionRepository;
         this.objectMapper = objectMapper;
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(10000);
-        this.restClient = RestClient.builder()
-                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
-                .requestFactory(requestFactory)
-                .build();
+        this.restClient = com.astroai.client.EngineRestClientFactory.createEngineClient(engineBaseUrl);
     }
 
     public PlanetaryCalculationResponseDto calculateAndPersistPlanets(UUID birthProfileId) {
@@ -134,7 +128,11 @@ public class PlanetService {
                     .retrieve()
                     .body(PlanetaryCalculationResponseDto.class);
         } catch (Exception httpEx) {
-            return invokeLocalPythonEngineCli(requestPayload);
+            try {
+                return invokeLocalPythonEngineCli(requestPayload);
+            } catch (Exception cliEx) {
+                throw new IllegalStateException("Engine HTTP call failed (" + httpEx.getMessage() + ") and local CLI failed (" + cliEx.getMessage() + ")", httpEx);
+            }
         }
     }
 

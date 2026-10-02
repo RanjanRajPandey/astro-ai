@@ -27,13 +27,7 @@ public class FrameworkService {
             @Value("${astroai.engine.base-url:http://localhost:8000}") String engineBaseUrl
     ) {
         this.objectMapper = objectMapper;
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(10000);
-        this.restClient = RestClient.builder()
-                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
-                .requestFactory(requestFactory)
-                .build();
+        this.restClient = com.astroai.client.EngineRestClientFactory.createEngineClient(engineBaseUrl);
     }
 
     @Cacheable(value = CacheConfig.FRAMEWORKS_CACHE, key = "#questionText != null ? #questionText.toLowerCase().trim() : 'default'")
@@ -57,7 +51,11 @@ public class FrameworkService {
                     .retrieve()
                     .body(QuestionClassificationResponseDto.class);
         } catch (Exception httpEx) {
-            return invokeLocalPythonEngineCli(requestPayload);
+            try {
+                return invokeLocalPythonEngineCli(requestPayload);
+            } catch (Exception cliEx) {
+                throw new IllegalStateException("Engine HTTP call failed (" + httpEx.getMessage() + ")", httpEx);
+            }
         }
     }
 

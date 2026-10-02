@@ -173,7 +173,7 @@ export function App() {
     let active = true;
     setLoading(true);
     setError(null);
-    Promise.all([
+    Promise.allSettled([
       getD1Chart(activeProfileId),
       getNakshatraAnalysis(activeProfileId),
       getVimshottariDashas(activeProfileId),
@@ -187,39 +187,40 @@ export function App() {
     ])
       .then(
         ([
-          d1Res,
-          nakRes,
-          dashaRes,
-          divRes,
-          aspRes,
-          shadRes,
-          bhavaRes,
-          yogaRes,
-          transitRes,
-          tempRes,
+          d1,
+          nak,
+          dasha,
+          div,
+          asp,
+          shad,
+          bhava,
+          yoga,
+          transit,
+          temp,
         ]) => {
           if (!active) return;
-          setChartData(d1Res);
-          setNakshatraData(nakRes);
-          setDashaData(dashaRes);
-          setDivisionalData(divRes);
-          setAspectData(aspRes);
-          setShadbalaData(shadRes);
-          setBhavaBalaData(bhavaRes);
-          setYogaData(yogaRes);
-          setTransitData(transitRes);
-          setTemporalData(tempRes);
+          if (d1.status === 'fulfilled') setChartData(d1.value);
+          if (nak.status === 'fulfilled') setNakshatraData(nak.value);
+          if (dasha.status === 'fulfilled') setDashaData(dasha.value);
+          if (div.status === 'fulfilled') setDivisionalData(div.value);
+          if (asp.status === 'fulfilled') setAspectData(asp.value);
+          if (shad.status === 'fulfilled') setShadbalaData(shad.value);
+          if (bhava.status === 'fulfilled') setBhavaBalaData(bhava.value);
+          if (yoga.status === 'fulfilled') setYogaData(yoga.value);
+          if (transit.status === 'fulfilled') setTransitData(transit.value);
+          if (temp.status === 'fulfilled') setTemporalData(temp.value);
           setSelectedPlanet('Sun');
           setSelectedHouse(1);
+
+          if (d1.status === 'rejected') {
+            const reason: any = d1.reason;
+            setError(
+              reason?.response?.data?.message ||
+                'Calculating Vedic astrological chart... Please allow a few seconds and refresh.',
+            );
+          }
         },
       )
-      .catch((err: any) => {
-        if (!active) return;
-        setError(
-          err?.response?.data?.message ||
-            'Failed to load D1 Kundli, Nakshatra, Dasha, Divisional, Aspect, Shadbala, Bhava Bala, Yoga, Transit & Temporal charts.',
-        );
-      })
       .finally(() => {
         if (active) setLoading(false);
       });

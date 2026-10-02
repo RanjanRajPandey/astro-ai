@@ -44,13 +44,7 @@ public class YogaService {
         this.chartPersistenceHelper = chartPersistenceHelper;
         this.yogaRepository = yogaRepository;
         this.objectMapper = objectMapper;
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(15000);
-        this.restClient = RestClient.builder()
-                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
-                .requestFactory(requestFactory)
-                .build();
+        this.restClient = com.astroai.client.EngineRestClientFactory.createEngineClient(engineBaseUrl);
     }
 
     public YogaCalculationResponseDto calculateAndPersistYogas(UUID birthProfileId) {
@@ -133,7 +127,11 @@ public class YogaService {
                     .retrieve()
                     .body(YogaCalculationResponseDto.class);
         } catch (Exception httpEx) {
-            return invokeLocalPythonEngineCli(requestPayload);
+            try {
+                return invokeLocalPythonEngineCli(requestPayload);
+            } catch (Exception cliEx) {
+                throw new IllegalStateException("Engine HTTP call failed (" + httpEx.getMessage() + ")", httpEx);
+            }
         }
     }
 

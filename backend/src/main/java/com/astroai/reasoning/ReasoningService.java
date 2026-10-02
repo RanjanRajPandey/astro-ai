@@ -46,13 +46,7 @@ public class ReasoningService {
         this.analysisSessionRepository = analysisSessionRepository;
         this.reasoningItemRepository = reasoningItemRepository;
         this.objectMapper = objectMapper;
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(15000);
-        this.restClient = RestClient.builder()
-                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
-                .requestFactory(requestFactory)
-                .build();
+        this.restClient = com.astroai.client.EngineRestClientFactory.createEngineClient(engineBaseUrl);
     }
 
     @Transactional
@@ -175,7 +169,11 @@ public class ReasoningService {
                     .retrieve()
                     .body(ReasoningSynthesisResponseDto.class);
         } catch (Exception httpEx) {
-            return invokeLocalPythonEngineCli(requestPayload);
+            try {
+                return invokeLocalPythonEngineCli(requestPayload);
+            } catch (Exception cliEx) {
+                throw new IllegalStateException("Engine HTTP call failed (" + httpEx.getMessage() + ")", httpEx);
+            }
         }
     }
 

@@ -41,13 +41,7 @@ public class TransitService {
         this.chartPersistenceHelper = chartPersistenceHelper;
         this.transitRepository = transitRepository;
         this.objectMapper = objectMapper;
-        SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
-        requestFactory.setConnectTimeout(5000);
-        requestFactory.setReadTimeout(15000);
-        this.restClient = RestClient.builder()
-                .baseUrl(com.astroai.client.EngineUrlNormalizer.normalize(engineBaseUrl))
-                .requestFactory(requestFactory)
-                .build();
+        this.restClient = com.astroai.client.EngineRestClientFactory.createEngineClient(engineBaseUrl);
     }
 
     @Cacheable(value = CacheConfig.TRANSITS_CACHE, key = "#birthProfileId + '-' + (#transitTimeUtc != null ? #transitTimeUtc : 'default')")
@@ -116,7 +110,11 @@ public class TransitService {
                     .retrieve()
                     .body(TransitCalculationResponseDto.class);
         } catch (Exception httpEx) {
-            return invokeLocalPythonEngineCli(requestPayload);
+            try {
+                return invokeLocalPythonEngineCli(requestPayload);
+            } catch (Exception cliEx) {
+                throw new IllegalStateException("Engine HTTP call failed (" + httpEx.getMessage() + ")", httpEx);
+            }
         }
     }
 

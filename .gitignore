@@ -4,6 +4,7 @@
 !.env.example
 !.env.*.example
 .neon/
+.agents/
 
 # Java / Spring Boot / Maven
 target/

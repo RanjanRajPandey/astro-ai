@@ -149,3 +149,35 @@ def calculate_raw_sidereal_bodies(
     (Sun, Moon, Mars, Mercury, Jupiter, Venus, Saturn, Rahu, Ketu).
     """
     return dict(_calculate_raw_sidereal_bodies_cached(jd_ut, ayanamsha_type, node_type))
+
+
+def get_ephemeris_cache_stats() -> dict:
+    """Return aggregated LRU cache statistics across all astronomical ephemeris functions."""
+    ayanamsha_info = get_ayanamsha_value.cache_info()
+    asc_info = _calculate_sidereal_ascendant_cached.cache_info()
+    bodies_info = _calculate_raw_sidereal_bodies_cached.cache_info()
+
+    total_hits = ayanamsha_info.hits + asc_info.hits + bodies_info.hits
+    total_misses = ayanamsha_info.misses + asc_info.misses + bodies_info.misses
+    total_size = ayanamsha_info.currsize + asc_info.currsize + bodies_info.currsize
+    max_size = ayanamsha_info.maxsize + asc_info.maxsize + bodies_info.maxsize
+
+    return {
+        "total_hits": total_hits,
+        "total_misses": total_misses,
+        "current_size": total_size,
+        "max_size": max_size,
+        "hit_ratio": total_hits / (total_hits + total_misses) if (total_hits + total_misses) > 0 else 0.0,
+        "caches": {
+            "ayanamsha": {"hits": ayanamsha_info.hits, "misses": ayanamsha_info.misses, "size": ayanamsha_info.currsize},
+            "ascendant": {"hits": asc_info.hits, "misses": asc_info.misses, "size": asc_info.currsize},
+            "planetary_bodies": {"hits": bodies_info.hits, "misses": bodies_info.misses, "size": bodies_info.currsize},
+        },
+    }
+
+
+def clear_ephemeris_cache() -> None:
+    """Evict all cached astronomical ephemeris data."""
+    get_ayanamsha_value.cache_clear()
+    _calculate_sidereal_ascendant_cached.cache_clear()
+    _calculate_raw_sidereal_bodies_cached.cache_clear()

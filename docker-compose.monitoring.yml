@@ -1,0 +1,58 @@
+version: "3.9"
+
+# ==============================================================================
+# Astro-AI Monitoring & Observability Stack (docker-compose.monitoring.yml)
+# Runs Prometheus (port 9090) and Grafana (port 3001) connected to the
+# platform network.
+# ==============================================================================
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: astro-ai-prometheus
+    restart: unless-stopped
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--storage.tsdb.retention.time=30d"
+      - "--web.enable-lifecycle"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alert.rules.yml:/etc/prometheus/alert.rules.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - "9090:9090"
+    networks:
+      - astro-backend-net
+      - astro-frontend-net
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: astro-ai-grafana
+    restart: unless-stopped
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GRAFANA_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin123}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    ports:
+      - "3001:3000"
+    depends_on:
+      - prometheus
+    networks:
+      - astro-frontend-net
+
+volumes:
+  prometheus_data:
+    name: astro_ai_prometheus_data
+  grafana_data:
+    name: astro_ai_grafana_data
+
+networks:
+  astro-frontend-net:
+    external: true
+  astro-backend-net:
+    external: true

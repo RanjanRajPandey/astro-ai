@@ -1,0 +1,37 @@
+# ==============================================================================
+# Prometheus Configuration for Astro-AI Platform
+# ==============================================================================
+
+global:
+  scrape_interval: 10s
+  evaluation_interval: 10s
+  scrape_timeout: 5s
+
+rule_files:
+  - "alert.rules.yml"
+
+scrape_configs:
+  # 1. Spring Boot Core Backend
+  - job_name: "astro-ai-backend"
+    metrics_path: "/actuator/prometheus"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["backend:8080"]
+        labels:
+          service: "backend"
+          environment: "production"
+
+  # 2. Python Deterministic Astrology Calculation Engine
+  - job_name: "astro-ai-engine"
+    metrics_path: "/metrics"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["astrology-engine:8000"]
+        labels:
+          service: "astrology-engine"
+          environment: "production"
+
+  # 3. Prometheus Self-Monitoring
+  - job_name: "prometheus"
+    static_configs:
+      - targets: ["localhost:9090"]

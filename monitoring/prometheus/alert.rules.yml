@@ -1,0 +1,56 @@
+# ==============================================================================
+# Prometheus Alerting Rules for Astro-AI
+# ==============================================================================
+
+groups:
+  - name: astro_ai_alerts
+    rules:
+      # Alert: Any Service Instance is Down
+      - alert: AstroServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Astro-AI service instance {{ $labels.instance }} is down"
+          description: "Target {{ $labels.instance }} on job {{ $labels.job }} has been unreachable for more than 1 minute."
+
+      # Alert: High API Response Latency (p95 > 2.5s)
+      - alert: HighCalculationLatency
+        expr: histogram_quantile(0.95, sum(rate(http_server_requests_seconds_bucket[5m])) by (le)) > 2.5
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API response latency detected"
+          description: "p95 API response duration is exceeding 2.5 seconds over the last 5 minutes."
+
+      # Alert: Low Cache Hit Ratio (< 40% under sustained load)
+      - alert: LowCacheHitRatio
+        expr: (sum(rate(cache_gets_total{result="hit"}[5m])) / sum(rate(cache_gets_total[5m]))) < 0.40
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Caffeine cache hit ratio below 40%"
+          description: "Cache hit ratio is critically low, resulting in excessive database and ephemeris recalculation overhead."
+
+      # Alert: Elevated HTTP 5xx Server Error Rate
+      - alert: HighServerErrorRate
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[5m])) / sum(rate(http_server_requests_seconds_count[5m])) > 0.05
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "HTTP 5xx error rate exceeds 5%"
+          description: "The backend is returning elevated 5xx internal server errors."
+
+      # Alert: JVM Memory Saturation (> 85%)
+      - alert: HighJvmHeapUsage
+        expr: (sum(jvm_memory_used_bytes{area="heap"}) / sum(jvm_memory_max_bytes{area="heap"})) > 0.85
+        for: 3m
+        labels:
+          severity: warning
+        annotations:
+          summary: "JVM Heap usage is exceeding 85%"
+          description: "Astro-AI backend heap memory is nearing capacity, risk of OutOfMemoryError."

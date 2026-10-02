@@ -1,2 +1,0 @@
-# divisional module
-

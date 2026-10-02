@@ -1,2 +1,0 @@
-# drishti module
-

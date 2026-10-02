@@ -1,2 +1,0 @@
-# nakshatra module
-

@@ -41,7 +41,7 @@ interface ApiEnvelope<T> {
 
 const http = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 15000,
+  timeout: 60000,
 });
 
 http.interceptors.request.use((config) => {

@@ -9,6 +9,9 @@ import {
   Plus,
   RefreshCw,
   AlertTriangle,
+  Search,
+  Trash2,
+  Download,
 } from 'lucide-react';
 import type {
   ChatMessage,
@@ -20,6 +23,8 @@ import {
   listChatSessions,
   getChatSessionMessages,
   sendChatMessage,
+  deleteChatSession,
+  exportChatSession,
 } from '../../services/api';
 import { ExplainabilityModal } from './ExplainabilityModal';
 
@@ -63,6 +68,11 @@ export const AiChatbotSection: React.FC<AiChatbotSectionProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Phase 21: History Search, Delete, and Export state
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isExporting, setIsExporting] = useState(false);
+  const [isDeletingSession, setIsDeletingSession] = useState(false);
 
   // Explainability Modal State
   const [selectedTrace, setSelectedTrace] = useState<ExplainabilityTrace | null>(null);
@@ -181,6 +191,61 @@ export const AiChatbotSection: React.FC<AiChatbotSectionProps> = ({
     }
   };
 
+  const handleDeleteSession = async (sessionId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!window.confirm('Are you sure you want to delete this consultation session?')) return;
+    setIsDeletingSession(true);
+    try {
+      await deleteChatSession(sessionId);
+      const remaining = sessions.filter((s) => s.id !== sessionId);
+      setSessions(remaining);
+      if (activeSessionId === sessionId) {
+        if (remaining.length > 0) {
+          setActiveSessionId(remaining[0].id);
+        } else {
+          setActiveSessionId(null);
+          setMessages([]);
+        }
+      }
+    } catch (err: unknown) {
+      console.error('Failed to delete session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to delete session.');
+    } finally {
+      setIsDeletingSession(false);
+    }
+  };
+
+  const handleExportSession = async () => {
+    if (!activeSessionId) return;
+    setIsExporting(true);
+    try {
+      const markdown = await exportChatSession(activeSessionId);
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `astro_consultation_${activeSessionId.substring(0, 8)}.md`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (err: unknown) {
+      console.error('Failed to export session:', err);
+      setError(err instanceof Error ? err.message : 'Failed to export session.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const filteredSessions = sessions.filter((s) => {
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase().trim();
+    return (
+      s.title.toLowerCase().includes(q) ||
+      (s.rolling_summary && s.rolling_summary.toLowerCase().includes(q))
+    );
+  });
+
   return (
     <section className="bg-slate-900/85 border border-slate-800/90 rounded-2xl p-5 sm:p-6 shadow-2xl space-y-6">
       {/* Header */}
@@ -192,27 +257,44 @@ export const AiChatbotSection: React.FC<AiChatbotSectionProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-xl font-bold text-slate-100">
-                Phase 19: AI Chatbot &amp; "Why This Answer?" Explainability UI
+                Phase 19 &amp; 21: AI Chatbot, Explainability &amp; Saved History
               </h2>
               <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-purple-500/10 border border-purple-500/30 text-purple-300">
-                Multi-Turn Shastric Dialogue
+                Multi-Turn Shastric Dialogue &amp; Archive
               </span>
             </div>
             <p className="text-sm text-slate-400 mt-0.5">
-              Interactive consultation with live shastric provenance, verified ground-truth context, and anti-hallucination audits.
+              Interactive consultation with live shastric provenance, verified ground-truth context, conversation history search, and report exports.
             </p>
           </div>
         </div>
 
-        {/* New Session Button */}
-        <button
-          onClick={() => handleCreateNewSession()}
-          disabled={!birthProfileId}
-          className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-2 transition-all cursor-pointer self-start md:self-auto"
-        >
-          <Plus className="w-3.5 h-3.5 text-purple-400" />
-          <span>New Session</span>
-        </button>
+        <div className="flex items-center gap-2 self-start md:self-auto">
+          {/* Export Report Button */}
+          <button
+            onClick={handleExportSession}
+            disabled={!activeSessionId || isExporting}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+            title="Export full Shastric consultation report as Markdown"
+          >
+            {isExporting ? (
+              <RefreshCw className="w-3.5 h-3.5 text-cyan-400 animate-spin" />
+            ) : (
+              <Download className="w-3.5 h-3.5 text-cyan-400" />
+            )}
+            <span>Export (.md)</span>
+          </button>
+
+          {/* New Session Button */}
+          <button
+            onClick={() => handleCreateNewSession()}
+            disabled={!birthProfileId}
+            className="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 disabled:opacity-50 text-slate-200 text-xs font-medium border border-slate-700 flex items-center gap-2 transition-all cursor-pointer"
+          >
+            <Plus className="w-3.5 h-3.5 text-purple-400" />
+            <span>New Session</span>
+          </button>
+        </div>
       </div>
 
       {/* Main Grid: Sessions Sidebar + Chat Thread */}
@@ -220,26 +302,55 @@ export const AiChatbotSection: React.FC<AiChatbotSectionProps> = ({
         {/* Sessions Sidebar */}
         <div className="md:col-span-1 space-y-2">
           <div className="flex items-center justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider">
-            <span>Sessions ({sessions.length})</span>
+            <span>Sessions ({filteredSessions.length})</span>
             {isLoading && <RefreshCw className="w-3 h-3 text-purple-400 animate-spin" />}
           </div>
+
+          {/* Search History Filter */}
+          <div className="relative">
+            <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-500" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search history..."
+              className="w-full bg-slate-950/70 border border-slate-800 rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-purple-500"
+            />
+          </div>
+
           <div className="space-y-1.5 max-h-96 overflow-y-auto pr-1">
-            {sessions.map((s) => (
-              <button
-                key={s.id}
-                onClick={() => setActiveSessionId(s.id)}
-                className={`w-full text-left p-3 rounded-xl border text-xs transition-all ${
-                  activeSessionId === s.id
-                    ? 'bg-purple-950/70 border-purple-500/60 text-purple-200 shadow-sm'
-                    : 'bg-slate-950/50 border-slate-800/80 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
-                }`}
-              >
-                <div className="font-semibold truncate">{s.title}</div>
-                <div className="text-[10px] text-slate-500 mt-1">
-                  {new Date(s.updated_at).toLocaleDateString()} • {new Date(s.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {filteredSessions.length === 0 ? (
+              <div className="p-3 text-center text-slate-500 text-xs">
+                No matching sessions found
+              </div>
+            ) : (
+              filteredSessions.map((s) => (
+                <div
+                  key={s.id}
+                  onClick={() => setActiveSessionId(s.id)}
+                  className={`group relative w-full text-left p-3 rounded-xl border text-xs transition-all cursor-pointer ${
+                    activeSessionId === s.id
+                      ? 'bg-purple-950/70 border-purple-500/60 text-purple-200 shadow-sm'
+                      : 'bg-slate-950/50 border-slate-800/80 text-slate-400 hover:bg-slate-800/50 hover:text-slate-200'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-1">
+                    <div className="font-semibold truncate flex-1">{s.title}</div>
+                    <button
+                      onClick={(e) => handleDeleteSession(s.id, e)}
+                      disabled={isDeletingSession}
+                      className="opacity-0 group-hover:opacity-100 hover:text-red-400 text-slate-500 p-0.5 rounded transition-all cursor-pointer"
+                      title="Delete consultation session"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                  <div className="text-[10px] text-slate-500 mt-1">
+                    {new Date(s.updated_at).toLocaleDateString()} • {new Date(s.updated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </div>
                 </div>
-              </button>
-            ))}
+              ))
+            )}
           </div>
         </div>
 

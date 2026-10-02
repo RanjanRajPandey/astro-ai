@@ -69,6 +69,14 @@ export async function createBirthProfile(payload: CreateBirthProfilePayload): Pr
   return res.data.data;
 }
 
+export async function updateBirthProfile(
+  id: string,
+  payload: CreateBirthProfilePayload,
+): Promise<BirthProfile> {
+  const res = await http.put<ApiEnvelope<BirthProfile>>(`/birth-profiles/${id}`, payload);
+  return res.data.data;
+}
+
 export async function deleteBirthProfile(id: string): Promise<void> {
   await http.delete(`/birth-profiles/${id}`);
 }
@@ -275,6 +283,29 @@ export async function getExplainabilityTrace(messageId: string): Promise<Explain
     `/ai/chat-sessions/messages/${messageId}/explain`,
   );
   return res.data.data;
+}
+
+export async function deleteChatSession(sessionId: string): Promise<void> {
+  await http.delete(`/ai/chat-sessions/${sessionId}`);
+}
+
+export async function listUserChatSessions(userId: string): Promise<ChatSession[]> {
+  const res = await http.get<ApiEnvelope<ChatSession[]>>(`/ai/chat-sessions/user/${userId}`);
+  return res.data.data;
+}
+
+export async function searchChatSessions(userId: string, query?: string): Promise<ChatSession[]> {
+  const res = await http.get<ApiEnvelope<ChatSession[]>>('/ai/chat-sessions/search', {
+    params: { userId, query: query || '' },
+  });
+  return res.data.data;
+}
+
+export async function exportChatSession(sessionId: string): Promise<string> {
+  const res = await http.get<string>(`/ai/chat-sessions/${sessionId}/export`, {
+    responseType: 'text',
+  });
+  return res.data;
 }
 
 export function getStoredAccessToken(): string | null {

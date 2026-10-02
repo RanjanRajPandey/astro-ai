@@ -2,10 +2,13 @@ package com.astroai.birth;
 
 import com.astroai.chart.ChartPersistenceHelper;
 import com.astroai.common.ResourceNotFoundException;
+import com.astroai.config.CacheConfig;
 import com.astroai.location.LocationService;
 import com.astroai.location.ResolvedLocationTime;
 import com.astroai.user.User;
 import com.astroai.user.UserRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -100,6 +103,15 @@ public class BirthProfileService {
                 .orElseThrow(() -> new ResourceNotFoundException("BirthProfile not found with id: " + id));
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.CHARTS_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.DIVISIONAL_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.DASHA_CACHE, allEntries = true),
+            @CacheEvict(value = CacheConfig.ASPECTS_CACHE, allEntries = true),
+            @CacheEvict(value = CacheConfig.STRENGTH_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.BHAVA_BALA_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.TRANSITS_CACHE, allEntries = true)
+    })
     public BirthProfileResponse updateProfile(UUID id, BirthProfileRequest request) {
         return chartPersistenceHelper.runSynchronizedTransaction(() -> {
             BirthProfile existing = findEntityOrThrow(id);
@@ -133,6 +145,15 @@ public class BirthProfileService {
         });
     }
 
+    @Caching(evict = {
+            @CacheEvict(value = CacheConfig.CHARTS_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.DIVISIONAL_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.DASHA_CACHE, allEntries = true),
+            @CacheEvict(value = CacheConfig.ASPECTS_CACHE, allEntries = true),
+            @CacheEvict(value = CacheConfig.STRENGTH_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.BHAVA_BALA_CACHE, key = "#id"),
+            @CacheEvict(value = CacheConfig.TRANSITS_CACHE, allEntries = true)
+    })
     public void deleteProfile(UUID id) {
         chartPersistenceHelper.runSynchronizedTransaction(() -> {
             BirthProfile existing = findEntityOrThrow(id);

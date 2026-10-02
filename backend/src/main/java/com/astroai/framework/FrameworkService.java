@@ -8,7 +8,9 @@ import java.nio.file.Path;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import com.astroai.config.CacheConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -34,6 +36,7 @@ public class FrameworkService {
                 .build();
     }
 
+    @Cacheable(value = CacheConfig.FRAMEWORKS_CACHE, key = "#questionText != null ? #questionText.toLowerCase().trim() : 'default'")
     public QuestionClassificationResponseDto classifyQuestionAndLoadFrameworks(String questionText) {
         Map<String, Object> requestPayload = new LinkedHashMap<>();
         requestPayload.put(

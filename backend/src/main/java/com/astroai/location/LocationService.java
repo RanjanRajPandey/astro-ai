@@ -1,7 +1,9 @@
 package com.astroai.location;
 
+import com.astroai.config.CacheConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -228,6 +230,7 @@ public class LocationService {
                 .build();
     }
 
+    @Cacheable(value = CacheConfig.GEOCODING_CACHE, key = "#query != null ? #query.toLowerCase().trim() : ''")
     public List<GazetteerCity> searchCities(String query) {
         String normalized = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         Set<String> seen = new HashSet<>();

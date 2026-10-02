@@ -17,7 +17,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import com.astroai.config.CacheConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -54,6 +56,7 @@ public class BhavaBalaService {
                 .build();
     }
 
+    @Cacheable(value = CacheConfig.BHAVA_BALA_CACHE, key = "#birthProfileId")
     public BhavaBalaCalculationResponseDto calculateAndPersistBhavaBala(UUID birthProfileId) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 

@@ -7,6 +7,8 @@ import com.astroai.house.HouseService;
 import com.astroai.planet.PlanetPositionDto;
 import com.astroai.planet.PlanetService;
 import com.astroai.planet.PlanetaryCalculationResponseDto;
+import com.astroai.config.CacheConfig;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,6 +31,7 @@ public class ChartService {
         this.houseService = houseService;
     }
 
+    @Cacheable(value = CacheConfig.CHARTS_CACHE, key = "#birthProfileId")
     public KundliChartResponseDto getD1KundliChart(UUID birthProfileId) {
         BirthProfileResponse profile = birthProfileService.getProfile(birthProfileId);
         PlanetaryCalculationResponseDto planetsRes = planetService.calculateAndPersistPlanets(birthProfileId);

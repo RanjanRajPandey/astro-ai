@@ -13,7 +13,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import com.astroai.config.CacheConfig;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -48,6 +50,7 @@ public class TransitService {
                 .build();
     }
 
+    @Cacheable(value = CacheConfig.TRANSITS_CACHE, key = "#birthProfileId + '-' + (#transitTimeUtc != null ? #transitTimeUtc : 'default')")
     public TransitCalculationResponseDto calculateAndPersistTransits(UUID birthProfileId, String transitTimeUtc) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 

@@ -13,4 +13,16 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom'],
+          'vendor-lucide': ['lucide-react'],
+          'vendor-axios': ['axios'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 600,
+  },
 });

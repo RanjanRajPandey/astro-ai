@@ -3,8 +3,10 @@ package com.astroai.dasha;
 import com.astroai.birth.BirthProfile;
 import com.astroai.birth.BirthProfileService;
 import com.astroai.chart.ChartPersistenceHelper;
+import com.astroai.config.CacheConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Service;
@@ -51,6 +53,7 @@ public class DashaService {
                 .build();
     }
 
+    @Cacheable(value = CacheConfig.DASHA_CACHE, key = "#birthProfileId + '-' + (#targetDatetimeIso != null ? #targetDatetimeIso : 'default')")
     public DashaCalculationResponseDto calculateAndPersistDashas(UUID birthProfileId, String targetDatetimeIso) {
         BirthProfile profile = birthProfileService.findEntityOrThrow(birthProfileId);
 

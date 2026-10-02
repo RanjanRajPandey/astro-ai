@@ -7,7 +7,23 @@ spring:
     open-in-view: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
+        jdbc:
+          batch_size: 50
+        order_inserts: true
+        order_updates: true
+  cache:
+    type: caffeine
+    cache-names:
+      - geocodingCache
+      - chartsCache
+      - divisionalCache
+      - dashaCache
+      - aspectsCache
+      - strengthCache
+      - bhavaBalaCache
+      - transitsCache
+      - frameworksCache
   flyway:
     enabled: true
     locations: classpath:db/migration

@@ -19,9 +19,15 @@ public final class EngineUrlNormalizer {
             trimmed = "http://" + trimmed;
         }
 
-        // If Render private service name without port, append internal port 8000
-        if (trimmed.equals("http://astro-ai-engine") || trimmed.equals("https://astro-ai-engine")) {
-            trimmed = "http://astro-ai-engine:8000";
+        // If hostname does not have a port specified
+        String afterScheme = trimmed.substring(trimmed.indexOf("://") + 3);
+        if (!afterScheme.contains(":") && !afterScheme.contains("/")) {
+            if (afterScheme.equalsIgnoreCase("localhost") || afterScheme.equals("127.0.0.1")) {
+                trimmed = trimmed + ":8000";
+            } else {
+                // Render web services route private network traffic via port 10000
+                trimmed = trimmed + ":10000";
+            }
         }
 
         return trimmed;

@@ -43,7 +43,18 @@ app.include_router(evidence_router)
 app.include_router(reasoning_router)
 
 
+@app.get("/", tags=["System"])
+def root():
+    return {
+        "status": "UP",
+        "service": "astrology-engine",
+        "health": "/health",
+        "specification_version": DEFAULT_SPEC.specification_version,
+    }
+
+
 @app.get("/health", response_model=EngineHealthResponse, tags=["System"])
+@app.get("/api/v1/health", response_model=EngineHealthResponse, tags=["System"])
 def get_health() -> EngineHealthResponse:
     return EngineHealthResponse(
         status="UP",
@@ -56,3 +67,4 @@ def get_health() -> EngineHealthResponse:
         dasha_year_days=DEFAULT_SPEC.dasha_year_days,
         rahu_ketu_trinal_aspects=DEFAULT_SPEC.rahu_ketu_trinal_aspects,
     )
+

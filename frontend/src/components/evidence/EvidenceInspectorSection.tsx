@@ -48,24 +48,43 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('ALL');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  const raw = evidenceData as any;
+  const questionText = raw?.questionText || raw?.question_text || 'Inquiry Evidence';
+  const questionCategory = raw?.questionCategory || raw?.question_category || 'GENERAL';
+  const frameworkVersion = raw?.frameworkVersion || raw?.framework_version || '1.0';
+  const evidenceItems: any[] = Array.isArray(raw?.evidenceItems)
+    ? raw.evidenceItems
+    : Array.isArray(raw?.evidence_items)
+    ? raw.evidence_items
+    : [];
+  const totalEvidenceCount = raw?.totalEvidenceCount ?? raw?.total_evidence_count ?? evidenceItems.length;
+  const favorableCount = raw?.favorableCount ?? raw?.favorable_count ?? 0;
+  const challengingCount = raw?.challengingCount ?? raw?.challenging_count ?? 0;
+  const neutralCount = raw?.neutralCount ?? raw?.neutral_count ?? 0;
+  const timeWindowsSummary: string[] = Array.isArray(raw?.timeWindowsSummary)
+    ? raw.timeWindowsSummary
+    : Array.isArray(raw?.time_windows_summary)
+    ? raw.time_windows_summary
+    : [];
+
   const filteredItems = useMemo(() => {
-    if (!evidenceData?.evidenceItems) return [];
-    return evidenceData.evidenceItems.filter((item: EvidenceItem) => {
+    if (!evidenceItems || !evidenceItems.length) return [];
+    return evidenceItems.filter((item: any) => {
       const finding =
         item.finding || (item.classification === 'SUPPORTING' ? 'FAVORABLE' : item.classification || 'NEUTRAL');
-      const ruleRef = item.ruleReference || item.rule || '';
+      const ruleRef = item.ruleReference || item.rule_reference || item.rule || '';
       const matchFinding =
         selectedFinding === 'ALL' || finding === selectedFinding;
       const matchCategory =
         selectedCategory === 'ALL' || item.category === selectedCategory;
       const matchSearch =
         !searchQuery.trim() ||
-        item.factor.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        item.observation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (item.factor && item.factor.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (item.observation && item.observation.toLowerCase().includes(searchQuery.toLowerCase())) ||
         ruleRef.toLowerCase().includes(searchQuery.toLowerCase());
       return matchFinding && matchCategory && matchSearch;
     });
-  }, [evidenceData, selectedFinding, selectedCategory, searchQuery]);
+  }, [evidenceItems, selectedFinding, selectedCategory, searchQuery]);
 
   if (!evidenceData) return null;
 
@@ -110,15 +129,15 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
           <div className="text-slate-400">Active Inquiry &amp; Framework Target:</div>
           <div className="font-semibold text-amber-300 flex items-center gap-2">
             <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            &ldquo;{evidenceData.questionText}&rdquo;
+            &ldquo;{questionText}&rdquo;
           </div>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="px-2.5 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 font-mono text-xs">
-            Category: {evidenceData.questionCategory}
+            Category: {questionCategory}
           </span>
           <span className="px-2.5 py-1 rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-300 font-mono text-xs">
-            v{evidenceData.frameworkVersion}
+            v{frameworkVersion}
           </span>
         </div>
       </div>
@@ -131,7 +150,7 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
             Total Evidence
           </span>
           <span className="text-2xl font-bold text-slate-100 mt-2">
-            {evidenceData.totalEvidenceCount}
+            {totalEvidenceCount}
           </span>
           <span className="text-[11px] text-slate-500 mt-1">
             Evaluated Shastra factors
@@ -144,7 +163,7 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
             Favorable
           </span>
           <span className="text-2xl font-bold text-emerald-300 mt-2">
-            {evidenceData.favorableCount}
+            {favorableCount}
           </span>
           <span className="text-[11px] text-emerald-500/80 mt-1">
             Auspicious indicators
@@ -157,7 +176,7 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
             Challenging
           </span>
           <span className="text-2xl font-bold text-amber-300 mt-2">
-            {evidenceData.challengingCount}
+            {challengingCount}
           </span>
           <span className="text-[11px] text-amber-500/80 mt-1">
             Afflictions / remedial
@@ -170,7 +189,7 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
             Neutral / Baseline
           </span>
           <span className="text-2xl font-bold text-slate-300 mt-2">
-            {evidenceData.neutralCount}
+            {neutralCount}
           </span>
           <span className="text-[11px] text-slate-500 mt-1">
             Stabilizing matrix
@@ -308,14 +327,14 @@ export const EvidenceInspectorSection: React.FC<EvidenceInspectorSectionProps> =
       </div>
 
       {/* Time Windows & Temporal Summary */}
-      {evidenceData.timeWindowsSummary && evidenceData.timeWindowsSummary.length > 0 && (
+      {timeWindowsSummary.length > 0 && (
         <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 space-y-2">
           <div className="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
             <Layers className="w-3.5 h-3.5 text-indigo-400" />
             Temporal Confluence Windows Linked to Evidence:
           </div>
           <div className="flex flex-wrap gap-2 pt-1">
-            {evidenceData.timeWindowsSummary.map((tw: string, i: number) => (
+            {timeWindowsSummary.map((tw: string, i: number) => (
               <span
                 key={i}
                 className="px-2.5 py-1 text-xs rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 font-mono"

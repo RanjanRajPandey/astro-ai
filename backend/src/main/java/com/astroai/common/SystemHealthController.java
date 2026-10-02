@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api")
 public class SystemHealthController {
 
     @Value("${astroai.ai.provider:MOCK}")
@@ -17,11 +16,12 @@ public class SystemHealthController {
     @Value("${astroai.engine.base-url:http://localhost:8000}")
     private String astroEngineUrl;
 
-    @GetMapping("/health")
+    @GetMapping({"/", "/api", "/api/health"})
     public ApiResponse<Map<String, Object>> health() {
         return ApiResponse.ok(Map.of(
                 "status", "UP",
                 "service", "astro-ai-backend",
+                "frontendUrl", "http://localhost:5173",
                 "aiProvider", aiProvider,
                 "astrologyEngineUrl", astroEngineUrl,
                 "specificationVersion", "1.0.0-BPHS-LAHIRI"

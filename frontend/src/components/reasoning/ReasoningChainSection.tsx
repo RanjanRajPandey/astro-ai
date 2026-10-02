@@ -11,7 +11,6 @@ import {
   Activity,
 } from 'lucide-react';
 import type {
-  ReasoningStep,
   ReasoningSynthesisResponse,
 } from '../../types/astrology';
 
@@ -38,8 +37,30 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
 
   if (!reasoningData) return null;
 
-  const isOverallFavorable = reasoningData.overallVerdict === 'FAVORABLE';
-  const isOverallModerate = reasoningData.overallVerdict === 'MODERATE_PROGRESS';
+  const raw = reasoningData as any;
+  const questionText = raw.questionText || raw.question_text || 'Inquiry Analysis';
+  const questionCategory = raw.questionCategory || raw.question_category || 'GENERAL';
+  const frameworkVersion = raw.frameworkVersion || raw.framework_version || '1.0';
+  const primaryHouses: number[] = Array.isArray(raw.primaryHouses)
+    ? raw.primaryHouses
+    : Array.isArray(raw.primary_houses)
+    ? raw.primary_houses
+    : [];
+  const compositeScore: number = raw.compositeScore ?? raw.composite_score ?? 0;
+  const overallVerdict: string = raw.overallVerdict || raw.overall_verdict || 'MODERATE_PROGRESS';
+  const reasoningSteps: any[] = Array.isArray(raw.reasoningSteps)
+    ? raw.reasoningSteps
+    : Array.isArray(raw.reasoning_steps)
+    ? raw.reasoning_steps
+    : [];
+  const classicalRemedies: string[] = Array.isArray(raw.classicalRemedies)
+    ? raw.classicalRemedies
+    : Array.isArray(raw.classical_remedies)
+    ? raw.classical_remedies
+    : [];
+
+  const isOverallFavorable = overallVerdict === 'FAVORABLE';
+  const isOverallModerate = overallVerdict === 'MODERATE_PROGRESS';
 
   return (
     <section className="bg-slate-900/70 border border-slate-800/80 rounded-2xl p-5 sm:p-6 shadow-xl space-y-6">
@@ -84,17 +105,19 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
             Synthesized Inquiry Verdict
           </div>
           <h3 className="text-lg sm:text-xl font-bold text-slate-100">
-            &ldquo;{reasoningData.questionText}&rdquo;
+            &ldquo;{questionText}&rdquo;
           </h3>
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="px-2.5 py-1 rounded-lg bg-slate-800 border border-slate-700 text-slate-300 font-mono">
-              Domain: {reasoningData.questionCategory}
+              Domain: {questionCategory}
             </span>
-            <span className="px-2.5 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 font-mono">
-              Houses: {reasoningData.primaryHouses.map((h) => `H${h}`).join(', ')}
-            </span>
+            {primaryHouses.length > 0 && (
+              <span className="px-2.5 py-1 rounded-lg bg-indigo-950/40 border border-indigo-800/40 text-indigo-300 font-mono">
+                Houses: {primaryHouses.map((h) => `H${h}`).join(', ')}
+              </span>
+            )}
             <span className="px-2.5 py-1 rounded-lg bg-slate-800/60 border border-slate-700/60 text-slate-400 font-mono">
-              v{reasoningData.frameworkVersion}
+              v{frameworkVersion}
             </span>
           </div>
         </div>
@@ -104,7 +127,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
           <div className="text-center">
             <div className="text-xs text-slate-400 uppercase font-medium">Composite Score</div>
             <div className="text-3xl font-extrabold text-amber-300 font-mono mt-0.5">
-              {reasoningData.compositeScore}
+              {compositeScore}
               <span className="text-xs font-normal text-slate-500">/100</span>
             </div>
             <div className="w-24 bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden mx-auto">
@@ -116,7 +139,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                     ? 'bg-amber-400'
                     : 'bg-rose-400'
                 }`}
-                style={{ width: `${Math.min(reasoningData.compositeScore, 100)}%` }}
+                style={{ width: `${Math.min(compositeScore, 100)}%` }}
               />
             </div>
           </div>
@@ -132,7 +155,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                   : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
               }`}
             >
-              {reasoningData.overallVerdict.replace('_', ' ')}
+              {overallVerdict.replace('_', ' ')}
             </span>
           </div>
         </div>
@@ -146,10 +169,26 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
         </div>
 
         <div className="space-y-3">
-          {reasoningData.reasoningSteps.map((step: ReasoningStep, idx: number) => {
-            const isFavorable = step.verdict === 'FAVORABLE';
-            const isChallenging = step.verdict === 'CHALLENGING';
+          {reasoningSteps.map((step: any, idx: number) => {
+            const stepOrder = step.stepOrder ?? step.step_order ?? idx + 1;
+            const stepType = step.stepType || step.step_type || 'NATAL_PROMISE';
+            const stepTitle = step.title || `Step ${stepOrder}`;
+            const stepNarrative = step.narrative || '';
+            const confidenceScore = step.confidenceScore ?? step.confidence_score ?? 0.8;
+            const stepVerdict = step.verdict || 'NEUTRAL';
+            const isFavorable = stepVerdict === 'FAVORABLE';
+            const isChallenging = stepVerdict === 'CHALLENGING';
             const isSelected = activeStepIndex === idx;
+            const linkedFactors: string[] = Array.isArray(step.linkedFactors)
+              ? step.linkedFactors
+              : Array.isArray(step.linked_factors)
+              ? step.linked_factors
+              : [];
+            const shastraCitations: string[] = Array.isArray(step.shastraCitations)
+              ? step.shastraCitations
+              : Array.isArray(step.shastra_citations)
+              ? step.shastra_citations
+              : [];
 
             const borderClass = isSelected
               ? 'border-amber-500/70 shadow-lg shadow-amber-500/5'
@@ -161,7 +200,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
 
             return (
               <div
-                key={step.stepOrder}
+                key={stepOrder}
                 onClick={() => setActiveStepIndex(isSelected ? null : idx)}
                 className={`p-4 rounded-xl border ${borderClass} bg-slate-950/40 cursor-pointer transition-all space-y-3`}
               >
@@ -169,12 +208,12 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="flex items-center gap-2.5">
                     <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-200">
-                      {step.stepOrder}
+                      {stepOrder}
                     </div>
                     <div className="flex items-center gap-2">
-                      {STEP_ICONS[step.stepType]}
+                      {STEP_ICONS[stepType] || <Compass className="w-4 h-4 text-amber-400" />}
                       <span className="font-semibold text-slate-200 text-sm">
-                        {step.title}
+                        {stepTitle}
                       </span>
                     </div>
                   </div>
@@ -182,7 +221,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                   <div className="flex items-center gap-2">
                     {/* Confidence Score */}
                     <span className="text-[11px] font-mono text-slate-400 bg-slate-800/80 px-2 py-0.5 rounded-md border border-slate-700">
-                      Confidence: {Math.round(step.confidenceScore * 100)}%
+                      Confidence: {Math.round(confidenceScore * 100)}%
                     </span>
 
                     {/* Verdict Pill */}
@@ -195,23 +234,23 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                           : 'bg-slate-800 text-slate-300 border-slate-700'
                       }`}
                     >
-                      {step.verdict}
+                      {stepVerdict}
                     </span>
                   </div>
                 </div>
 
                 {/* Narrative Text */}
                 <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  {step.narrative}
+                  {stepNarrative}
                 </p>
 
                 {/* Linked Factors Chips */}
-                {step.linkedFactors && step.linkedFactors.length > 0 && (
+                {linkedFactors.length > 0 && (
                   <div className="flex flex-wrap items-center gap-1.5 pt-1">
                     <span className="text-[10px] text-slate-400 font-medium uppercase mr-1">
                       Evidence:
                     </span>
-                    {step.linkedFactors.map((f, i) => (
+                    {linkedFactors.map((f, i) => (
                       <span
                         key={i}
                         className="px-2 py-0.5 text-[10px] rounded-md bg-slate-800/90 text-slate-300 border border-slate-700/80 font-mono"
@@ -223,10 +262,10 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
                 )}
 
                 {/* Shastra Citations */}
-                {step.shastraCitations && step.shastraCitations.length > 0 && (
+                {shastraCitations.length > 0 && (
                   <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-amber-400/90 font-mono">
                     <BookOpen className="w-3.5 h-3.5 text-amber-500 flex-shrink-0" />
-                    <span>Citations: {step.shastraCitations.join(' • ')}</span>
+                    <span>Citations: {shastraCitations.join(' • ')}</span>
                   </div>
                 )}
               </div>
@@ -236,7 +275,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
       </div>
 
       {/* Classical Vedic Remedies (Parihara) Card */}
-      {reasoningData.classicalRemedies && reasoningData.classicalRemedies.length > 0 && (
+      {classicalRemedies.length > 0 && (
         <div className="p-5 rounded-2xl bg-amber-950/15 border border-amber-800/40 space-y-3">
           <div className="flex items-center gap-2 text-amber-400 font-bold text-sm">
             <ShieldAlert className="w-4 h-4 text-amber-400" />
@@ -246,7 +285,7 @@ export const ReasoningChainSection: React.FC<ReasoningChainSectionProps> = ({
             Prescribed Parashari and Vedic practices to propitiate planetary energies, mitigate karmic friction, and align with cosmic dharma:
           </p>
           <ul className="space-y-2 pt-1">
-            {reasoningData.classicalRemedies.map((remedy, idx) => (
+            {classicalRemedies.map((remedy, idx) => (
               <li
                 key={idx}
                 className="flex items-start gap-2.5 text-xs text-slate-200 bg-slate-900/60 p-2.5 rounded-xl border border-amber-900/30"

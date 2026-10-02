@@ -1,16 +1,50 @@
+# ==============================================================================
+# Astro-AI Backend (Spring Boot 3 / Java 21) Multi-Stage Production Dockerfile
+# ==============================================================================
+
+# Stage 1: Build & Package
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /workspace/app
+
+# Install dos2unix or sed to guarantee Unix line endings on mvnw
+RUN apk add --no-cache dos2unix
 
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
+
+RUN dos2unix mvnw && chmod +x mvnw
+
+# Pre-cache Maven dependencies
+RUN ./mvnw dependency:go-offline -B || true
+
 COPY src src
+RUN ./mvnw clean package -DskipTests -B
 
-RUN chmod +x mvnw && ./mvnw clean package -DskipTests
-
+# Stage 2: Hardened Production Runtime
 FROM eclipse-temurin:21-jre-alpine
+LABEL maintainer="Astro-AI Platform Team"
+
 WORKDIR /app
-COPY --from=build /workspace/app/target/*.jar app.jar
+
+# Run as non-root user for container security
+RUN addgroup -S -g 10001 astro && \
+    adduser -S -u 10001 -G astro astro
+
+COPY --from=build --chown=astro:astro /workspace/app/target/*.jar app.jar
+
+USER astro
 
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "/app/app.jar"]
+
+# Production Health Check via Spring Boot Actuator
+HEALTHCHECK --interval=30s --timeout=5s --retries=3 --start-period=45s \
+  CMD wget --no-verbose --tries=1 --spider http://127.0.0.1:8080/actuator/health || exit 1
+
+# Production JVM tuning: G1GC, container-aware RAM allocation, fast random generation
+ENTRYPOINT ["java", \
+  "-XX:+UseG1GC", \
+  "-XX:MaxRAMPercentage=75.0", \
+  "-XX:+ExitOnOutOfMemoryError", \
+  "-Djava.security.egd=file:/dev/./urandom", \
+  "-jar", "/app/app.jar"]

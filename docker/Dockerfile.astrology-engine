@@ -1,9 +1,16 @@
+# ==============================================================================
+# Astro-AI Deterministic Astrology Engine (Python 3.11 / FastAPI)
+# ==============================================================================
+
 FROM python:3.11-slim
+LABEL maintainer="Astro-AI Platform Team"
 
 WORKDIR /app
 
+# Install build dependencies for C-extensions (pyswisseph) and curl for healthcheck
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
@@ -11,6 +18,18 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+# Create non-root user
+RUN useradd -m -u 10001 -s /bin/bash astrouser && \
+    chown -R astrouser:astrouser /app
+
+USER astrouser
+
 EXPOSE 8000
 
-CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Health check
+HEALTHCHECK --interval=20s --timeout=5s --retries=3 --start-period=15s \
+  CMD curl -f http://127.0.0.1:8000/health || exit 1
+
+# Launch uvicorn with multi-worker support in production
+ENV WORKERS=4
+CMD ["sh", "-c", "exec uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers ${WORKERS}"]

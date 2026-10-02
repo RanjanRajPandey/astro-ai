@@ -1,0 +1,174 @@
+version: "3.9"
+
+# ==============================================================================
+# Astro-AI Production Orchestration (docker-compose.prod.yml)
+# Hardened multi-container stack with network isolation, healthchecks,
+# resource limits, and log rotation policies.
+# ==============================================================================
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: astro-ai-prod-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-astro_ai_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-astro_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password must be set}
+    volumes:
+      - postgres_prod_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-astro_admin} -d ${POSTGRES_DB:-astro_ai_prod}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - astro-backend-net
+
+  astrology-engine:
+    build:
+      context: ./astrology-engine
+      dockerfile: ../docker/Dockerfile.astrology-engine
+    container_name: astro-ai-prod-astrology-engine
+    restart: always
+    environment:
+      DEFAULT_AYANAMSHA: ${DEFAULT_AYANAMSHA:-LAHIRI}
+      DEFAULT_NODE_TYPE: ${DEFAULT_NODE_TYPE:-MEAN_NODE}
+      DEFAULT_HOUSE_SYSTEM: ${DEFAULT_HOUSE_SYSTEM:-WHOLE_SIGN_WITH_SRIPATI}
+      DEFAULT_DASHA_YEAR_DAYS: ${DEFAULT_DASHA_YEAR_DAYS:-365.2425}
+      RAHU_KETU_TRINAL_ASPECTS: ${RAHU_KETU_TRINAL_ASPECTS:-false}
+      WORKERS: ${WORKERS:-4}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+    deploy:
+      resources:
+        limits:
+          cpus: "2.0"
+          memory: 2048M
+        reservations:
+          cpus: "0.5"
+          memory: 512M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - astro-backend-net
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: ../docker/Dockerfile.backend
+    container_name: astro-ai-prod-backend
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+      astrology-engine:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${POSTGRES_DB:-astro_ai_prod}
+      POSTGRES_USER: ${POSTGRES_USER:-astro_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Database password must be set}
+      DB_MAX_POOL_SIZE: ${DB_MAX_POOL_SIZE:-25}
+      DB_MIN_IDLE: ${DB_MIN_IDLE:-5}
+      ASTRO_ENGINE_URL: http://astrology-engine:8000
+      JWT_SECRET: ${JWT_SECRET:?JWT secret must be set}
+      JWT_ACCESS_EXPIRATION_MS: ${JWT_ACCESS_EXPIRATION_MS:-900000}
+      JWT_REFRESH_EXPIRATION_MS: ${JWT_REFRESH_EXPIRATION_MS:-604800000}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost}
+      AI_PROVIDER: ${AI_PROVIDER:-MOCK}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:8080/actuator/health"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
+    deploy:
+      resources:
+        limits:
+          cpus: "3.0"
+          memory: 3072M
+        reservations:
+          cpus: "1.0"
+          memory: 1024M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - astro-backend-net
+      - astro-frontend-net
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: ../docker/Dockerfile.frontend
+    container_name: astro-ai-prod-frontend
+    restart: always
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/"]
+      interval: 20s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    deploy:
+      resources:
+        limits:
+          cpus: "1.5"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 128M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "5"
+    networks:
+      - astro-frontend-net
+
+volumes:
+  postgres_prod_data:
+    name: astro_ai_postgres_prod_data
+
+networks:
+  # External public gateway network
+  astro-frontend-net:
+    driver: bridge
+  # Isolated private tier: Database and astrology calculation engine have NO direct public ingress
+  astro-backend-net:
+    driver: bridge
+    internal: true

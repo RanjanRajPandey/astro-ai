@@ -194,7 +194,7 @@ astro-ai/
 
 ### 1. Run Everything via Docker Compose (Recommended)
 ```bash
-git clone https://github.com/Rraj222004/astro-ai.git
+git clone https://github.com/RanjanRajPandey/astro-ai.git
 cd astro-ai
 docker compose up --build
 ```

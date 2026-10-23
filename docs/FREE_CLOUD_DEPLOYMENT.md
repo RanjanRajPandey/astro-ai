@@ -47,7 +47,7 @@ This guide walks you through deploying **Astro-AI** completely **FREE** (no cred
 
 1. Open [**https://render.com**](https://render.com) and click **Sign In with GitHub**.
 2. Click the **New +** button at the top right and select **Blueprint**.
-3. Connect your GitHub repository: `Rraj222004/astro-ai`.
+3. Connect your GitHub repository: `RanjanRajPandey/astro-ai`.
 4. Render will automatically read the [`render.yaml`](file:///C:/Users/ranja/.gemini/antigravity/scratch/astro-ai/render.yaml) file we configured and show:
    * `astro-ai-engine` (FastAPI calculation engine)
    * `astro-ai-backend` (Spring Boot API)
@@ -65,7 +65,7 @@ This guide walks you through deploying **Astro-AI** completely **FREE** (no cred
 
 1. Open [**https://vercel.com**](https://vercel.com) and click **Continue with GitHub**.
 2. Click **Add New...** -> **Project**.
-3. Import your repository: `Rraj222004/astro-ai`.
+3. Import your repository: `RanjanRajPandey/astro-ai`.
 4. Configure the project settings:
    * **Framework Preset**: `Vite`
    * **Root Directory**: Click *Edit* and select `frontend`.

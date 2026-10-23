@@ -64,7 +64,7 @@ Astro-AI utilizes a multi-tiered, microservice architecture isolated into distin
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/Rraj222004/astro-ai.git /opt/astro-ai
+git clone https://github.com/RanjanRajPandey/astro-ai.git /opt/astro-ai
 cd /opt/astro-ai
 ```
 

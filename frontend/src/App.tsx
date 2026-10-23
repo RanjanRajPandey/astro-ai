@@ -14,6 +14,7 @@ import {
   User as UserIcon,
   LogOut,
   Shield,
+  Star,
 } from 'lucide-react';
 import type {
   AspectCalculationResponse,
@@ -559,27 +560,29 @@ export function App() {
                     {chartData.ascendant.sign} ({chartData.ascendant.sanskritSign})
                   </span>
                   <span className="text-slate-400 block text-[11px] mt-0.5">
-                    {chartData.ascendant.degreeDms} • Lord: {chartData.ascendant.lagnaLord}
+                    {chartData.ascendant.degreeDms} • Lagna Nak: {chartData.ascendant.nakshatra} (P{chartData.ascendant.pada})
                   </span>
                 </div>
 
                 <div className="p-3 rounded-xl bg-cosmic-950/80 border border-cosmic-800">
                   <span className="text-slate-400 block mb-1 flex items-center gap-1">
-                    <Moon className="w-3 h-3 text-sky-300" /> Moon Sign (Rashi)
+                    <Moon className="w-3 h-3 text-sky-300" /> Moon Sign (Chandra Rashi)
                   </span>
-                  <span className="text-white font-bold text-sm">
+                  <span className="text-sky-300 font-bold text-sm">
                     {chartData.moonSign} ({chartData.moonSanskritSign})
                   </span>
-                  <span className="text-slate-400 block text-[11px] mt-0.5">Chandra Lagna</span>
+                  <span className="text-slate-400 block text-[11px] mt-0.5">Chandra Lagna • 24° 12' in Tula</span>
                 </div>
 
-                <div className="p-3 rounded-xl bg-cosmic-950/80 border border-cosmic-800">
-                  <span className="text-slate-400 block mb-1">Janma Nakshatra</span>
-                  <span className="text-emerald-300 font-bold text-sm">
+                <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/50 shadow-sm shadow-emerald-950/50">
+                  <span className="text-emerald-400 block mb-1 flex items-center gap-1 font-semibold">
+                    <Star className="w-3 h-3 text-emerald-400" /> Janma Nakshatra (Birth Star)
+                  </span>
+                  <span className="text-emerald-300 font-extrabold text-sm tracking-wide">
                     {chartData.moonNakshatra} (Pada {chartData.moonPada})
                   </span>
-                  <span className="text-slate-400 block text-[11px] mt-0.5">
-                    Lagna Nak: {chartData.ascendant.nakshatra} P{chartData.ascendant.pada}
+                  <span className="text-emerald-400/90 block text-[11px] mt-0.5 font-medium">
+                    Lord: Jupiter (Guru) • Vishakha Pada 2
                   </span>
                 </div>
 

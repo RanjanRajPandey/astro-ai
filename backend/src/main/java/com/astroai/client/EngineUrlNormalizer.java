@@ -24,6 +24,11 @@ public final class EngineUrlNormalizer {
             return "https://astro-ai-engine.onrender.com";
         }
 
+        // Public cloud domains (e.g. *.onrender.com) use standard public HTTPS (port 443) - do NOT append internal ports
+        if (trimmed.contains(".onrender.com") || trimmed.contains(".vercel.app") || trimmed.contains(".railway.app")) {
+            return trimmed;
+        }
+
         String afterScheme = trimmed.substring(trimmed.indexOf("://") + 3);
         if (!afterScheme.contains(":") && !afterScheme.contains("/")) {
             if (afterScheme.equalsIgnoreCase("localhost") || afterScheme.equals("127.0.0.1")) {

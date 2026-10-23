@@ -112,11 +112,27 @@ export function App() {
     if (bootstrapStartedRef.current) return;
     bootstrapStartedRef.current = true;
 
+    async function fetchProfilesWithRetry(maxAttempts = 4, delayMs = 4000): Promise<BirthProfile[]> {
+      for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+        try {
+          return await listBirthProfiles();
+        } catch (err) {
+          if (attempt === maxAttempts) throw err;
+          setError(
+            `Connecting to live astrology backend... (Render free-tier service waking up, attempt ${attempt}/${maxAttempts})`
+          );
+          await new Promise((res) => setTimeout(res, delayMs));
+        }
+      }
+      return [];
+    }
+
     async function bootstrap() {
       setLoading(true);
       setError(null);
       try {
-        let existing = await listBirthProfiles();
+        let existing = await fetchProfilesWithRetry();
+        setError(null);
         let ranjanProfile = existing.find(
           (p) =>
             p.name.toLowerCase().includes('ranjan') ||

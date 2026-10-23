@@ -44,7 +44,7 @@ public final class EngineRestClientFactory {
                 int port = uri.getPort();
 
                 // 1. If remote engine fails (UnknownHostException, refused, etc.), try alternate port on same host if not localhost
-                if (host != null && !host.equals("127.0.0.1") && !host.equalsIgnoreCase("localhost")) {
+                if (host != null && !host.contains(".onrender.com") && !host.contains(".app") && !host.equals("127.0.0.1") && !host.equalsIgnoreCase("localhost")) {
                     // First try localhost loopback on port 8000
                     try {
                         URI localUri = new URI("http", null, "127.0.0.1", 8000, uri.getPath(), uri.getQuery(), uri.getFragment());

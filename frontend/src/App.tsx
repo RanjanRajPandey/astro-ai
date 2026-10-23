@@ -190,57 +190,61 @@ export function App() {
     let active = true;
     setLoading(true);
     setError(null);
-    Promise.allSettled([
-      getD1Chart(activeProfileId),
-      getNakshatraAnalysis(activeProfileId),
-      getVimshottariDashas(activeProfileId),
-      getAllDivisionalCharts(activeProfileId),
-      getPlanetaryAspects(activeProfileId),
-      getPlanetaryShadbala(activeProfileId),
-      getHouseBhavaBala(activeProfileId),
-      getYogasAndDoshas(activeProfileId),
-      getGocharTransits(activeProfileId),
-      getTemporalForecast(activeProfileId),
-    ])
-      .then(
-        ([
-          d1,
-          nak,
-          dasha,
-          div,
-          asp,
-          shad,
-          bhava,
-          yoga,
-          transit,
-          temp,
-        ]) => {
-          if (!active) return;
-          if (d1.status === 'fulfilled') setChartData(d1.value);
-          if (nak.status === 'fulfilled') setNakshatraData(nak.value);
-          if (dasha.status === 'fulfilled') setDashaData(dasha.value);
-          if (div.status === 'fulfilled') setDivisionalData(div.value);
-          if (asp.status === 'fulfilled') setAspectData(asp.value);
-          if (shad.status === 'fulfilled') setShadbalaData(shad.value);
-          if (bhava.status === 'fulfilled') setBhavaBalaData(bhava.value);
-          if (yoga.status === 'fulfilled') setYogaData(yoga.value);
-          if (transit.status === 'fulfilled') setTransitData(transit.value);
-          if (temp.status === 'fulfilled') setTemporalData(temp.value);
-          setSelectedPlanet('Sun');
-          setSelectedHouse(1);
 
-          if (d1.status === 'rejected') {
-            const reason: any = d1.reason;
-            setError(
-              reason?.response?.data?.message ||
-                'Calculating Vedic astrological chart... Please allow a few seconds and refresh.',
-            );
-          }
-        },
-      )
-      .finally(() => {
-        if (active) setLoading(false);
+    // 1. Fetch core D1 chart first so Kundli, Lagna & Janma Nakshatra pillars appear immediately
+    getD1Chart(activeProfileId)
+      .then((d1) => {
+        if (!active) return;
+        setChartData(d1);
+        setLoading(false);
+        setSelectedPlanet('Sun');
+        setSelectedHouse(1);
+      })
+      .catch((err) => {
+        if (!active) return;
+        setError(
+          err?.response?.data?.message ||
+            'Calculating Vedic astrological chart... Please allow a few seconds and refresh.',
+        );
+        setLoading(false);
       });
+
+    // 2. Fetch analytical modules concurrently without blocking the main Kundli chart
+    getNakshatraAnalysis(activeProfileId)
+      .then((nak) => { if (active) setNakshatraData(nak); })
+      .catch(() => {});
+
+    getVimshottariDashas(activeProfileId)
+      .then((dasha) => { if (active) setDashaData(dasha); })
+      .catch(() => {});
+
+    getAllDivisionalCharts(activeProfileId)
+      .then((div) => { if (active) setDivisionalData(div); })
+      .catch(() => {});
+
+    getPlanetaryAspects(activeProfileId)
+      .then((asp) => { if (active) setAspectData(asp); })
+      .catch(() => {});
+
+    getPlanetaryShadbala(activeProfileId)
+      .then((shad) => { if (active) setShadbalaData(shad); })
+      .catch(() => {});
+
+    getHouseBhavaBala(activeProfileId)
+      .then((bhava) => { if (active) setBhavaBalaData(bhava); })
+      .catch(() => {});
+
+    getYogasAndDoshas(activeProfileId)
+      .then((yoga) => { if (active) setYogaData(yoga); })
+      .catch(() => {});
+
+    getGocharTransits(activeProfileId)
+      .then((tr) => { if (active) setTransitData(tr); })
+      .catch(() => {});
+
+    getTemporalForecast(activeProfileId)
+      .then((temp) => { if (active) setTemporalData(temp); })
+      .catch(() => {});
 
     getLatestEvidence(activeProfileId)
       .then((ev) => {

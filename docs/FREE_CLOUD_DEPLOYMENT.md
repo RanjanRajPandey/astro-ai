@@ -14,11 +14,11 @@ This guide walks you through deploying **Astro-AI** completely **FREE** (no cred
                 │
                 ▼ HTTPS
    [ Vercel: React SPA Frontend ]
-   https://astro-ai.vercel.app
+   https://astro-ai-tau-blue.vercel.app
                 │
                 ▼ HTTPS API Requests
    [ Render: Spring Boot API ] ──────────► [ Render: Swiss Ephemeris Engine ]
-   https://astro-ai-backend.onrender.com    https://astro-ai-engine.onrender.com
+   https://astro-ai-backend-lkjp.onrender.com    https://astro-ai-engine.onrender.com
                 │
                 ▼ Secure TLS
    [ Neon.tech: Free PostgreSQL ]
@@ -57,7 +57,7 @@ This guide walks you through deploying **Astro-AI** completely **FREE** (no cred
    * `SPRING_DATASOURCE_PASSWORD`: Your Neon password.
 6. Click **Apply**.
 7. Render will build and launch both services for free!
-8. Copy your backend's public URL once live (e.g., `https://astro-ai-backend.onrender.com`).
+8. Copy your backend's public URL once live (e.g., `https://astro-ai-backend-lkjp.onrender.com`).
 
 ---
 
@@ -71,10 +71,10 @@ This guide walks you through deploying **Astro-AI** completely **FREE** (no cred
    * **Root Directory**: Click *Edit* and select `frontend`.
 5. Under **Environment Variables**, add:
    * **Key**: `VITE_API_BASE_URL`
-   * **Value**: `https://astro-ai-backend.onrender.com/api` *(replace with your Render backend URL)*
+   * **Value**: `https://astro-ai-backend-lkjp.onrender.com/api` *(replace with your Render backend URL)*
 6. Click **Deploy**.
 7. In ~60 seconds, Vercel will give you a live production link:
-   👉 `https://astro-ai-xxxx.vercel.app`!
+   👉 `https://astro-ai-tau-blue.vercel.app`!
 
 ---
 
